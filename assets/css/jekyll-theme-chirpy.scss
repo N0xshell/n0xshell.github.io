@@ -1,0 +1,34 @@
+---
+---
+
+/* HTB green accent — overrides chirpy default blue */
+$link-color: #9fef00;
+
+@import "main";
+
+/* Post title hover */
+.post-preview a:hover h1,
+.post-preview a:hover h2 {
+  color: #9fef00 !important;
+}
+
+/* Sidebar */
+#sidebar {
+  background-color: #111;
+}
+
+/* Code blocks */
+.highlight {
+  background-color: #0d0d0d !important;
+}
+
+/* Tags */
+a.tag:hover {
+  border-color: #9fef00 !important;
+  color: #9fef00 !important;
+}
+
+/* Category links */
+.categories .card-body a:hover {
+  color: #9fef00 !important;
+}
