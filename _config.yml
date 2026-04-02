@@ -45,7 +45,7 @@ theme_mode: dark
 cdn:
 
 # Sidebar avatar — place your image at /assets/img/avatar.png
-avatar: /assets/img/avatar.png
+avatar: /assets/img/hacker.png
 
 social_preview_image:
 
