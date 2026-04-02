@@ -1,52 +1,52 @@
-/* Dracula theme - high specificity to override Chirpy dark mode */
-div.highlight, figure.highlight { background: #282a36 !important; }
+/* Nord syntax highlighting for Rouge/Chirpy */
+div.highlight, figure.highlight { background: #2e3440 !important; }
 
 div.highlight pre, figure.highlight pre,
-div.highlight code, figure.highlight code { 
-  background: #282a36 !important; 
-  color: #f8f8f2 !important; 
+div.highlight code, figure.highlight code {
+  background: #2e3440 !important;
+  color: #d8dee9 !important;
 }
 
 /* Comments */
 div.highlight .c, div.highlight .cm, div.highlight .c1, div.highlight .cs,
-figure.highlight .c, figure.highlight .cm, figure.highlight .c1 { color: #6272a4 !important; }
+figure.highlight .c, figure.highlight .cm, figure.highlight .c1 { color: #616e88 !important; }
 
 /* Keywords */
 div.highlight .k, div.highlight .kd, div.highlight .kn, div.highlight .kp,
 div.highlight .kr, div.highlight .kt,
-figure.highlight .k, figure.highlight .kd, figure.highlight .kn { color: #ff79c6 !important; }
+figure.highlight .k, figure.highlight .kd, figure.highlight .kn { color: #81a1c1 !important; }
 
 /* Strings */
 div.highlight .s, div.highlight .s1, div.highlight .s2, div.highlight .sb,
 div.highlight .sc, div.highlight .sd, div.highlight .se, div.highlight .si,
-figure.highlight .s, figure.highlight .s1, figure.highlight .s2 { color: #f1fa8c !important; }
+figure.highlight .s, figure.highlight .s1, figure.highlight .s2 { color: #a3be8c !important; }
 
 /* Numbers */
 div.highlight .m, div.highlight .mi, div.highlight .mf, div.highlight .mh,
-figure.highlight .m, figure.highlight .mi, figure.highlight .mf { color: #bd93f9 !important; }
+figure.highlight .m, figure.highlight .mi, figure.highlight .mf { color: #b48ead !important; }
 
 /* Operators */
 div.highlight .o, div.highlight .ow,
-figure.highlight .o, figure.highlight .ow { color: #ff79c6 !important; }
+figure.highlight .o, figure.highlight .ow { color: #81a1c1 !important; }
 
 /* Functions / class names */
 div.highlight .nf, div.highlight .nc, div.highlight .nd,
-figure.highlight .nf, figure.highlight .nc { color: #50fa7b !important; }
+figure.highlight .nf, figure.highlight .nc { color: #88c0d0 !important; }
 
 /* Variables */
 div.highlight .nv, div.highlight .vi, div.highlight .vc,
-figure.highlight .nv, figure.highlight .vi { color: #8be9fd !important; }
+figure.highlight .nv, figure.highlight .vi { color: #8fbcbb !important; }
 
 /* Tags */
-div.highlight .nt, figure.highlight .nt { color: #ff79c6 !important; }
+div.highlight .nt, figure.highlight .nt { color: #81a1c1 !important; }
 
 /* Errors */
-div.highlight .err, figure.highlight .err { color: #ff5555 !important; }
+div.highlight .err, figure.highlight .err { color: #bf616a !important; }
 
 /* Diff inserted/deleted */
-div.highlight .gi, figure.highlight .gi { color: #50fa7b !important; }
-div.highlight .gd, figure.highlight .gd { color: #ff5555 !important; }
+div.highlight .gi, figure.highlight .gi { color: #a3be8c !important; }
+div.highlight .gd, figure.highlight .gd { color: #bf616a !important; }
 
 /* Line numbers */
 div.highlight .ln, div.highlight .gl,
-figure.highlight .ln, figure.highlight .gl { color: #6272a4 !important; }
+figure.highlight .ln, figure.highlight .gl { color: #616e88 !important; }
