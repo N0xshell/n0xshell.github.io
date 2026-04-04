@@ -5,7 +5,9 @@ Converts an Obsidian .md note to a Jekyll/Chirpy post.
 Handles both ![[image]] and ![alt](image) formats.
 
 Usage:
-  python3 obsidian_to_jekyll.py <file.md> --category <cat> --tags <tag1> <tag2>
+  python3 obsidian_to_jekyll.py                        # scan mode
+  python3 obsidian_to_jekyll.py <file.md>              # single file
+  python3 obsidian_to_jekyll.py <file.md> -c Machines -D medium -o windows
 
 Categories: Machines | Prolabs | Exam Review
 """
@@ -17,9 +19,31 @@ import argparse
 from datetime import date
 from pathlib import Path
 
-POSTS_DIR  = Path("_posts")
-ASSETS_DIR = Path("assets/img/posts")
-CATEGORIES = ["Machines", "Prolabs", "Exam Review"]
+POSTS_DIR    = Path("_posts")
+ASSETS_DIR   = Path("assets/img/posts")
+CATEGORIES   = ["Machines", "Prolabs", "Exam Review"]
+DIFFICULTIES = ["easy", "medium", "hard", "insane"]
+OS_OPTIONS   = ["windows", "linux", "freebsd", "other"]
+
+WRITEUPS_ROOT = Path("/mnt/Files/Security-Related/Pentesting-Related/HackTheBox/Machines-Writeups")
+
+# Map subdir names to categories
+SUBDIR_CATEGORY_MAP = {
+    "medium-machines": "Machines",
+    "hard-machines":   "Machines",
+    "easy-machines":   "Machines",
+    "insane-machines": "Machines",
+    "exam review":     "Exam Review",
+    "prolabs":         "Prolabs",
+}
+
+# Map subdir names to difficulty
+SUBDIR_DIFFICULTY_MAP = {
+    "medium-machines": "medium",
+    "hard-machines":   "hard",
+    "easy-machines":   "easy",
+    "insane-machines": "insane",
+}
 
 
 def slugify(s):
@@ -27,6 +51,84 @@ def slugify(s):
     s = re.sub(r'[^\w\s-]', '', s)
     s = re.sub(r'[\s_]+', '-', s)
     return s.strip('-')
+
+
+def parse_date(date_str):
+    clean = date_str.replace('-', '')
+    if not re.match(r'^\d{8}$', clean):
+        sys.exit(f"[-] Invalid date '{date_str}' — use YYYY-MM-DD or YYYYMMDD")
+    formatted = f"{clean[:4]}-{clean[4:6]}-{clean[6:8]}"
+    try:
+        date.fromisoformat(formatted)
+    except ValueError:
+        sys.exit(f"[-] Invalid date '{date_str}' — not a real calendar date")
+    return formatted
+
+
+def get_published_slugs():
+    if not POSTS_DIR.exists():
+        return set()
+    return {
+        re.sub(r'^\d{4}-\d{2}-\d{2}-', '', p.stem)
+        for p in POSTS_DIR.glob("*.md")
+    }
+
+
+def scan_writeups():
+    if not WRITEUPS_ROOT.exists():
+        sys.exit(f"[-] Writeups root not found: {WRITEUPS_ROOT}")
+    found = []
+    for subdir in sorted(WRITEUPS_ROOT.iterdir()):
+        if not subdir.is_dir() or subdir.name.startswith('.'):
+            continue
+        for md in sorted(subdir.rglob("*.md")):
+            if md.name.startswith('.'):
+                continue
+            found.append(md)
+    return found
+
+
+def prompt_choice(question, options):
+    print(f"\n{question}")
+    for i, opt in enumerate(options, 1):
+        print(f"  {i}) {opt}")
+    while True:
+        try:
+            choice = input("  > ").strip()
+            if choice.lower() in [o.lower() for o in options]:
+                return choice.lower()
+            idx = int(choice) - 1
+            if 0 <= idx < len(options):
+                return options[idx].lower()
+        except (ValueError, KeyboardInterrupt):
+            print()
+            sys.exit(0)
+        print(f"  [-] Pick 1-{len(options)} or type the option name")
+
+
+def prompt_yn(question):
+    while True:
+        try:
+            ans = input(f"{question} [y/n] > ").strip().lower()
+            if ans in ('y', 'yes'):
+                return True
+            if ans in ('n', 'no'):
+                return False
+        except KeyboardInterrupt:
+            print()
+            sys.exit(0)
+
+
+def prompt_extra_tags():
+    print("\nExtra tags? (comma-separated, or leave blank)")
+    try:
+        raw = input("  > ").strip()
+    except KeyboardInterrupt:
+        print()
+        sys.exit(0)
+    if not raw:
+        return []
+    return [t.strip().lower() for t in raw.split(',') if t.strip()]
 
 
 def strip_frontmatter(content):
@@ -46,20 +148,14 @@ def find_image(filename, search_dirs):
 
 
 def convert(content, post_slug, search_dirs, img_dir):
-    # Fix bare image references: !Pasted image X.png -> ![[Pasted image X.png]]
     content = re.sub(r'!Pasted image ([^\n]+\.png)', r'![[Pasted image \1]]', content)
-
-    # %% Obsidian comments %%
     content = re.sub(r'%%.*?%%', '', content, flags=re.DOTALL)
-
-    # > [!NOTE] callouts
     content = re.sub(
         r'^> \[!(\w+)\]\s*(.*?)$',
         lambda m: f"> **{m.group(1).capitalize()}:** {m.group(2).strip()}",
         content, flags=re.MULTILINE
     )
 
-    # ![[image.png]] — handle BEFORE wikilinks so brackets aren't stripped first
     def handle_wiki_image(m):
         filename = m.group(1)
         src = find_image(filename, search_dirs)
@@ -71,16 +167,12 @@ def convert(content, post_slug, search_dirs, img_dir):
         return f"![{Path(filename).stem}](/assets/img/posts/{post_slug}/{filename})"
 
     content = re.sub(r'!\[\[([^\]]+)\]\]', handle_wiki_image, content)
-
-    # [[wikilinks]] — runs AFTER images are already handled
     content = re.sub(
         r'\[\[([^\]|]+)(?:\|([^\]]+))?\]\]',
         lambda m: m.group(2) or m.group(1),
         content
     )
 
-    # ![alt](image.png) — standard markdown images
-    # skip external URLs and already-converted /assets/ paths
     def handle_md_image(m):
         alt      = m.group(1)
         filename = m.group(2)
@@ -97,27 +189,34 @@ def convert(content, post_slug, search_dirs, img_dir):
         return f"![{alt}](/assets/img/posts/{post_slug}/{filename})"
 
     content = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', handle_md_image, content)
-
     return content
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("input",                             help="Obsidian .md file")
-    parser.add_argument("--category", "-c", required=True,  choices=CATEGORIES)
-    parser.add_argument("--tags",     "-t", nargs="+",       default=["htb"])
-    parser.add_argument("--date",     "-d", default=str(date.today()))
-    args = parser.parse_args()
-
-    src = Path(args.input).expanduser().resolve()
-    if not src.exists():
-        sys.exit(f"[-] Not found: {src}")
-
+def process_file(src, post_date, category=None, difficulty=None, os_tag=None, tags_cli=None):
     search_dirs = [src.parent, src.parent.parent, src.parent.parent.parent]
 
     title     = src.stem
     slug      = slugify(title)
-    post_name = f"{args.date}-{slug}"
+    post_name = f"{post_date}-{slug}"
+
+    # Infer from subdir name if not passed via CLI
+    subdir_key = src.parent.name.lower()
+    if not category:
+        category = SUBDIR_CATEGORY_MAP.get(subdir_key) or \
+                   prompt_choice("Category?", CATEGORIES).capitalize()
+    if not difficulty:
+        difficulty = SUBDIR_DIFFICULTY_MAP.get(subdir_key) or \
+                     prompt_choice("Difficulty?", DIFFICULTIES)
+    if not os_tag:
+        os_tag = prompt_choice("OS?", OS_OPTIONS)
+
+    if tags_cli:
+        raw  = " ".join(tags_cli)
+        tags = [t.strip().lower() for t in re.split(r'[,\s]+', raw) if t.strip()]
+    else:
+        tags  = [difficulty, os_tag]
+        extra = prompt_extra_tags()
+        tags += [t for t in extra if t not in tags]
 
     img_dir = ASSETS_DIR / post_name
     img_dir.mkdir(parents=True, exist_ok=True)
@@ -129,11 +228,12 @@ def main():
         img_dir
     )
 
-    tags_yaml = "\n".join(f"  - {t.lower()}" for t in args.tags)
+    tags_yaml   = "\n".join(f"  - {t}" for t in tags)
+    cat_display = category if category in CATEGORIES else category.capitalize()
     frontmatter = f"""---
 title: "{title}"
-date: {args.date} 00:00:00 +0100
-categories: [HackTheBox, {args.category}]
+date: {post_date} 00:00:00 +0100
+categories: [HackTheBox, {cat_display}]
 tags:
 {tags_yaml}
 ---
@@ -148,6 +248,47 @@ tags:
     print(f"\n    git add _posts/{post_name}.md assets/img/posts/{post_name}/")
     print(f"    git commit -m 'Add {title}'")
     print(f"    git push")
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("input",        nargs="?",           help="Obsidian .md file (omit to scan)")
+    parser.add_argument("--category",   "-c", choices=CATEGORIES)
+    parser.add_argument("--difficulty", "-D", choices=DIFFICULTIES)
+    parser.add_argument("--os",         "-o", choices=OS_OPTIONS)
+    parser.add_argument("--tags",       "-t", nargs="+")
+    parser.add_argument("--date",       "-d", default=str(date.today()))
+    args = parser.parse_args()
+
+    post_date = parse_date(args.date)
+
+    # --- Single file mode ---
+    if args.input:
+        src = Path(args.input).expanduser().resolve()
+        if not src.exists():
+            sys.exit(f"[-] Not found: {src}")
+        process_file(src, post_date, args.category, args.difficulty, args.os, args.tags)
+        return
+
+    # --- Scan mode ---
+    published = get_published_slugs()
+    all_files = scan_writeups()
+    new_files = [f for f in all_files if slugify(f.stem) not in published]
+
+    if not new_files:
+        print("[+] No new writeups found.")
+        return
+
+    print(f"[*] Found {len(new_files)} unpublished writeup(s):\n")
+    for i, f in enumerate(new_files, 1):
+        print(f"  {i}) {f.stem}  ({f.parent.name})")
+
+    print()
+    for f in new_files:
+        if prompt_yn(f"\nPublish '{f.stem}'?"):
+            process_file(f, post_date, args.category, args.difficulty, args.os, args.tags)
+        else:
+            print(f"  [-] Skipped {f.stem}")
 
 
 if __name__ == "__main__":
