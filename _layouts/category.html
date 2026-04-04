@@ -1,0 +1,22 @@
+---
+layout: page
+---
+{% include lang.html %}
+{% assign category_name = page.category | default: page.title %}
+{% assign posts_in_category = site.posts | where_exp: "post", "post.categories contains category_name" %}
+<div id="page-category">
+  <h1 class="ps-lg-2">
+    <i class="far fa-folder-open fa-fw text-muted"></i>
+    {{ page.title }}
+    <span class="lead text-muted ps-2">{{ posts_in_category | size }}</span>
+  </h1>
+  <ul class="content ps-0">
+    {% for post in posts_in_category %}
+      <li class="d-flex justify-content-between px-md-3">
+        <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+        <span class="dash flex-grow-1"></span>
+        {% include datetime.html date=post.date class='text-muted small text-nowrap' lang=lang %}
+      </li>
+    {% endfor %}
+  </ul>
+</div>
