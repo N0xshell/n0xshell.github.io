@@ -1,0 +1,8 @@
+---
+---
+@import "main";
+
+/* Remove code block window dots */
+div.highlight::before {
+  display: none !important;
+}
