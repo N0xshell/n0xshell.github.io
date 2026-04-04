@@ -21,6 +21,8 @@ from pathlib import Path
 
 POSTS_DIR    = Path("_posts")
 ASSETS_DIR   = Path("assets/img/posts")
+TAGS_DIR     = Path("tags")
+CATEGORIES_DIR = Path("_categories")
 CATEGORIES   = ["Machines", "Prolabs", "Exam Review"]
 DIFFICULTIES = ["easy", "medium", "hard", "insane"]
 OS_OPTIONS   = ["windows", "linux", "freebsd", "other"]
@@ -72,6 +74,31 @@ def get_published_slugs():
         re.sub(r'^\d{4}-\d{2}-\d{2}-', '', p.stem)
         for p in POSTS_DIR.glob("*.md")
     }
+
+
+def ensure_tag_page(tag):
+    """Create tags/<tag>.md if it doesn't exist yet."""
+    TAGS_DIR.mkdir(exist_ok=True)
+    tag_file = TAGS_DIR / f"{tag}.md"
+    if not tag_file.exists():
+        tag_file.write_text(
+            f"---\nlayout: tag\ntitle: {tag}\ntag: {tag}\npermalink: /tags/{tag}/\n---\n",
+            encoding="utf-8"
+        )
+        print(f"[+] Created tag page: {tag_file}")
+
+
+def ensure_category_page(category):
+    """Create _categories/<slug>.md if it doesn't exist yet."""
+    CATEGORIES_DIR.mkdir(exist_ok=True)
+    slug = slugify(category)
+    cat_file = CATEGORIES_DIR / f"{slug}.md"
+    if not cat_file.exists():
+        cat_file.write_text(
+            f"---\nlayout: category\ntitle: {category}\ncategory: {category}\npermalink: /categories/{slug}/\n---\n",
+            encoding="utf-8"
+        )
+        print(f"[+] Created category page: {cat_file}")
 
 
 def scan_writeups():
@@ -218,6 +245,12 @@ def process_file(src, post_date, category=None, difficulty=None, os_tag=None, ta
         extra = prompt_extra_tags()
         tags += [t for t in extra if t not in tags]
 
+    # Ensure tag and category pages exist
+    for tag in tags:
+        ensure_tag_page(tag)
+    ensure_category_page("HackTheBox")
+    ensure_category_page(category)
+
     img_dir = ASSETS_DIR / post_name
     img_dir.mkdir(parents=True, exist_ok=True)
 
@@ -245,7 +278,7 @@ tags:
 
     print(f"\n[+] Post:   {out}")
     print(f"[+] Images: {img_dir}/")
-    print(f"\n    git add _posts/{post_name}.md assets/img/posts/{post_name}/")
+    print(f"\n    git add _posts/{post_name}.md assets/img/posts/{post_name}/ tags/ _categories/")
     print(f"    git commit -m 'Add {title}'")
     print(f"    git push")
 
