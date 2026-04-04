@@ -1,7 +1,8 @@
 ---
-layout: redirect
+layout: category
 title: Machines
 icon: fas fa-server
 order: 1
-redirect_to: /categories/machines/
+category: Machines
+permalink: /categories/machines/
 ---

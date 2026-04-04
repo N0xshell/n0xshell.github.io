@@ -1,7 +1,8 @@
 ---
-layout: redirect
+layout: category
 title: Prolabs
 icon: fas fa-network-wired
 order: 2
-redirect_to: /categories/prolabs/
+category: Prolabs
+permalink: /categories/prolabs/
 ---

@@ -62,8 +62,6 @@ collections:
     sort_by: order
   categories:
     output: true
-  tags:
-    output: true
 defaults:
   - scope:
       path: ""
@@ -89,12 +87,6 @@ defaults:
     values:
       layout: category
       permalink: /categories/:title/
-  - scope:
-      path: ""
-      type: tags
-    values:
-      layout: tag
-      permalink: /tags/:title/
 sass:
   style: compressed
 compress_html:
