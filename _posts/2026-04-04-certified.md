@@ -1,6 +1,6 @@
 ---
 title: "Certified"
-date: 2026-0404 00:00:00 +0100
+date: 2026-04-04 00:00:00 +0100
 categories: [HackTheBox, Machines]
 tags:
   - medium, windows
