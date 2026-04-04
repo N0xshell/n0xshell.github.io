@@ -59,14 +59,7 @@ def convert(content, post_slug, search_dirs, img_dir):
         content, flags=re.MULTILINE
     )
 
-    # [[wikilinks]]
-    content = re.sub(
-        r'\[\[([^\]|]+)(?:\|([^\]]+))?\]\]',
-        lambda m: m.group(2) or m.group(1),
-        content
-    )
-
-    # ![[image.png]] — Obsidian wikilink images
+    # ![[image.png]] — handle BEFORE wikilinks so brackets aren't stripped first
     def handle_wiki_image(m):
         filename = m.group(1)
         src = find_image(filename, search_dirs)
@@ -78,6 +71,13 @@ def convert(content, post_slug, search_dirs, img_dir):
         return f"![{Path(filename).stem}](/assets/img/posts/{post_slug}/{filename})"
 
     content = re.sub(r'!\[\[([^\]]+)\]\]', handle_wiki_image, content)
+
+    # [[wikilinks]] — runs AFTER images are already handled
+    content = re.sub(
+        r'\[\[([^\]|]+)(?:\|([^\]]+))?\]\]',
+        lambda m: m.group(2) or m.group(1),
+        content
+    )
 
     # ![alt](image.png) — standard markdown images
     def handle_md_image(m):
