@@ -170,6 +170,21 @@ def find_image(filename, search_dirs):
     return None
 
 
+def make_image_html(src_path, alt, post_slug, filename):
+    """Return figure HTML if caption present, plain markdown otherwise."""
+    url = f"/assets/img/posts/{post_slug}/{filename}"
+    if alt and alt != Path(filename).stem:
+        return (
+            f'<figure>\n'
+            f'  <a href="{url}" data-lightbox="{filename}">\n'
+            f'    <img src="{url}" alt="{alt}">\n'
+            f'  </a>\n'
+            f'  <figcaption>{alt}</figcaption>\n'
+            f'</figure>'
+        )
+    return f"![{alt}]({url})"
+
+
 def convert(content, post_slug, search_dirs, img_dir):
     # Fix bare image references
     content = re.sub(r'!Pasted image ([^\n]+\.png)', r'![[Pasted image \1]]', content)
@@ -198,7 +213,7 @@ def convert(content, post_slug, search_dirs, img_dir):
             print(f"[+] Copied: {filename}")
         else:
             print(f"[!] Not found: {filename} — add manually to {img_dir}/")
-        return f"![{alt}](/assets/img/posts/{post_slug}/{filename})"
+        return make_image_html(src, alt, post_slug, filename)
 
     content = re.sub(r'!\[\[([^\]]+)\]\]', handle_wiki_image, content)
 
@@ -223,7 +238,7 @@ def convert(content, post_slug, search_dirs, img_dir):
             print(f"[+] Copied: {filename}")
         else:
             print(f"[!] Not found: {filename} — add manually to {img_dir}/")
-        return f"![{alt}](/assets/img/posts/{post_slug}/{filename})"
+        return make_image_html(src, alt, post_slug, filename)
 
     content = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', handle_md_image, content)
     return content
