@@ -8,7 +8,19 @@ div.highlight::before {
 }
 
 /* Code block background */
-.highlight, div[class^=language-] {
+.highlight {
+  background-color: #1a1a2e !important;
+}
+
+div[class^=language-] .highlight {
+  background-color: #1a1a2e !important;
+}
+
+div[class^=language-] {
+  background-color: #1a1a2e !important;
+}
+
+pre, pre.highlight {
   background-color: #1a1a2e !important;
 }
 
