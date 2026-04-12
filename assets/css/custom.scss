@@ -21,21 +21,26 @@ div.highlight::before {
 }
 
 /* Figure captions */
-figure[markdown="0"] {
+figure:has(figcaption) {
   text-align: center !important;
   margin: 1.5rem auto !important;
   display: block !important;
   width: 100% !important;
 }
 
-figure[markdown="0"] img {
+figure:has(figcaption) a {
+  display: block !important;
+  text-align: center !important;
+}
+
+figure:has(figcaption) img {
   max-width: 100% !important;
   border-radius: 6px !important;
   display: block !important;
   margin: 0 auto !important;
 }
 
-figure[markdown="0"] figcaption {
+figure:has(figcaption) figcaption {
   margin-top: 0.5rem !important;
   font-size: 0.82rem !important;
   color: var(--text-muted-color) !important;
