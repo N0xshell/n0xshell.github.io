@@ -188,9 +188,11 @@ def convert(content, post_slug, search_dirs, img_dir):
 
     # Fix headings missing space after #
     content = re.sub(r'^(#{1,6})([^ #\n])', r'\1 \2', content, flags=re.MULTILINE)
-
+    content = re.sub(r'([^\n])\n(```)', r'\1\n\n\2', content)
+    
     # Obsidian comments
     content = re.sub(r'%%.*?%%', '', content, flags=re.DOTALL)
+
 
     # Callouts
     content = re.sub(
