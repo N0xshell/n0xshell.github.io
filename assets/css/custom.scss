@@ -12,21 +12,45 @@ div.highlight::before {
   background-color: #0d1117 !important;
   padding-bottom: 0 !important;
 }
-
 div[class^=language-] .highlight {
   background-color: #0d1117 !important;
 }
-
 div[class^=language-] {
   background-color: #0d1117 !important;
 }
-
 pre, pre.highlight {
   background-color: #0d1117 !important;
 }
-
 .highlight pre {
   background-color: #0d1117 !important;
+}
+
+/* Left border accent on code blocks */
+div.highlight,
+figure.highlight,
+div[class^=language-] {
+  border-left: 4px solid #88c0d0 !important;
+  border-radius: 0 6px 6px 0 !important;
+}
+
+/* Rounded corners on all inline images */
+.post-content img:not(figure img) {
+  border-radius: 6px !important;
+}
+
+/* Inline code pop */
+code:not(.highlight code):not(pre code) {
+  background-color: #1c2333 !important;
+  color: #88c0d0 !important;
+  border: 1px solid #30363d !important;
+  border-radius: 4px !important;
+  padding: 0.1em 0.4em !important;
+  font-size: 0.88em !important;
+}
+
+/* Improved line height for post body readability */
+.post-content {
+  line-height: 1.85 !important;
 }
 
 /* Figure captions */
@@ -36,19 +60,16 @@ figure:has(figcaption) {
   display: block !important;
   width: 100% !important;
 }
-
 figure:has(figcaption) a {
   display: block !important;
   text-align: center !important;
 }
-
 figure:has(figcaption) img {
   max-width: 100% !important;
   border-radius: 6px !important;
   display: block !important;
   margin: 0 auto !important;
 }
-
 figure:has(figcaption) figcaption {
   margin-top: 0.5rem !important;
   font-size: 0.82rem !important;
@@ -57,4 +78,28 @@ figure:has(figcaption) figcaption {
   font-weight: bold !important;
   text-align: center !important;
   display: block !important;
+}
+
+/* Back to top button */
+#back-to-top {
+  display: none;
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 999;
+  background-color: #88c0d0;
+  color: #0d1117;
+  border: none;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  transition: opacity 0.3s ease;
+  line-height: 42px;
+  text-align: center;
+}
+#back-to-top:hover {
+  background-color: #8fbcbb;
 }
