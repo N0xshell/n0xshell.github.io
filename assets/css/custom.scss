@@ -10,6 +10,7 @@ div.highlight::before {
 /* Code block background */
 .highlight {
   background-color: #1a1a2e !important;
+  padding-bottom: 0 !important;
 }
 
 div[class^=language-] .highlight {
