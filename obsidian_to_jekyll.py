@@ -174,10 +174,10 @@ def make_image_html(src_path, alt, post_slug, filename):
     url = f"/assets/img/posts/{post_slug}/{filename}"
     if alt and alt != Path(filename).stem:
         return (
-            f'<figure markdown="0">\n'
-            f'  <img src="{url}" alt="{alt}" class="no-popup">\n'
-            f'  <figcaption>{alt}</figcaption>\n'
-            f'</figure>'
+            f'<div style="text-align:center;margin:1.5rem auto;">\n'
+            f'  <img src="{url}" alt="{alt}" style="max-width:100%;border-radius:6px;">\n'
+            f'  <p style="font-size:0.82rem;font-style:italic;font-weight:bold;color:#868686;margin-top:0.4rem;">{alt}</p>\n'
+            f'</div>'
         )
     return f"![{alt}]({url})"
 
