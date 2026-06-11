@@ -52,6 +52,8 @@ paginate: 10
 
 baseurl: ""
 future: true
+incremental: false
+show_drafts: false
 
 # ------------ Do not modify below unless you know what you're doing ------------------
 kramdown:
