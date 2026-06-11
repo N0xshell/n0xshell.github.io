@@ -1,7 +1,28 @@
 #!/usr/bin/env python3
 """
 obsidian_to_jekyll.py
-Converts an Obsidian .md note to a Jekyll/Chirpy post.
+Converts Obsidian .md notes + source code files (.c, .h, .cpp, etc.) into Jekyll/Chirpy posts.
+
+=== HOW TO USE ===
+
+1. Single Markdown file:
+   python3 obsidian_to_jekyll.py "/path/to/note.md" -c Development
+
+2. Single code file (C/C++/Header):
+   python3 obsidian_to_jekyll.py "/path/to/code.c" -c Reversing
+
+3. Whole folder (recommended for malware/dev):
+   python3 obsidian_to_jekyll.py "/path/to/development" -c Development
+
+4. Scan mode (all configured folders):
+   python3 obsidian_to_jekyll.py
+
+Categories:
+   - Machines     → under HackTheBox
+   - Development  → under Malware
+   - Reversing    → under Malware
+
+Update WRITEUPS_ROOTS list below with your actual Windows paths.
 """
 
 import re
@@ -20,23 +41,23 @@ CATEGORIES     = ["Machines", "Development", "Reversing"]
 DIFFICULTIES   = ["easy", "medium", "hard", "insane"]
 OS_OPTIONS     = ["windows", "linux", "freebsd", "other"]
 
-WRITEUPS_ROOT = Path("/mnt/Files/Security-Related/Pentesting-Related/HackTheBox/Machines-Writeups")
+# ================== UPDATE THESE PATHS ==================
+WRITEUPS_ROOTS = [
+    Path(r"C:\Users\N0xshell\Documents\n0xshell.github.io\development"),
+    Path(r"C:\Users\N0xshell\Documents\n0xshell.github.io\reversing"),
+    Path(r"C:\Users\N0xshell\Documents\n0xshell.github.io\malware"),
+    # Add your HTB path if needed:
+    # Path(r"/mnt/Files/Security-Related/Pentesting-Related/HackTheBox/Machines-Writeups"),
+]
 
 SUBDIR_CATEGORY_MAP = {
+    "development": "Development",
+    "reversing":   "Reversing",
+    "malware":     "Reversing",
     "medium-machines": "Machines",
     "hard-machines":   "Machines",
     "easy-machines":   "Machines",
     "insane-machines": "Machines",
-    "development":     "Development",
-    "reversing":       "Reversing",
-    "malware":         "Reversing",   # or Development
-}
-
-SUBDIR_DIFFICULTY_MAP = {
-    "medium-machines": "medium",
-    "hard-machines":   "hard",
-    "easy-machines":   "easy",
-    "insane-machines": "insane",
 }
 
 
@@ -55,17 +76,14 @@ def parse_date(date_str):
     try:
         date.fromisoformat(formatted)
     except ValueError:
-        sys.exit(f"[-] Invalid date '{date_str}' — not a real calendar date")
+        sys.exit(f"[-] Invalid date '{date_str}'")
     return formatted
 
 
 def get_published_slugs():
     if not POSTS_DIR.exists():
         return set()
-    return {
-        re.sub(r'^\d{4}-\d{2}-\d{2}-', '', p.stem)
-        for p in POSTS_DIR.glob("*.md")
-    }
+    return {re.sub(r'^\d{4}-\d{2}-\d{2}-', '', p.stem) for p in POSTS_DIR.glob("*.md")}
 
 
 def ensure_tag_page(tag):
@@ -91,51 +109,40 @@ def ensure_category_page(category):
         print(f"[+] Created category page: {cat_file}")
 
 
-def scan_writeups():
-    if not WRITEUPS_ROOT.exists():
-        print(f"[!] Writeups root not found: {WRITEUPS_ROOT} (scan mode limited)")
-        return []
+def scan_files():
     found = []
-    for subdir in sorted(WRITEUPS_ROOT.iterdir()):
-        if not subdir.is_dir() or subdir.name.startswith('.'):
+    for root in WRITEUPS_ROOTS:
+        if not root.exists():
+            print(f"[!] Folder not found: {root}")
             continue
-        for md in sorted(subdir.rglob("*.md")):
-            if md.name.startswith('.'):
+        for file in sorted(root.rglob("*.*")):
+            if file.name.startswith('.') or file.suffix.lower() not in {'.md', '.c', '.cpp', '.h', '.hpp', '.py', '.rs', '.go'}:
                 continue
-            found.append(md)
+            found.append(file)
     return found
 
 
-def prompt_choice(question, options):
-    print(f"\n{question}")
-    for i, opt in enumerate(options, 1):
-        print(f"  {i}) {opt}")
-    while True:
-        try:
-            choice = input("  > ").strip()
-            if choice.lower() in [o.lower() for o in options]:
-                return choice.lower()
-            idx = int(choice) - 1
-            if 0 <= idx < len(options):
-                return options[idx].lower()
-        except (ValueError, KeyboardInterrupt):
-            sys.exit(0)
-        print(f"  [-] Pick 1-{len(options)} or type the option name")
+def code_to_markdown(src_path):
+    """Convert source/header file into nice Markdown post"""
+    ext = src_path.suffix.lower()
+    lang_map = {
+        '.c': 'c', '.cpp': 'cpp', '.h': 'c', '.hpp': 'cpp',
+        '.py': 'python', '.rs': 'rust', '.go': 'go'
+    }
+    lang = lang_map.get(ext, 'text')
 
+    title = src_path.stem
+    content = src_path.read_text(encoding="utf-8", errors="replace")
 
-def prompt_yn(question):
-    while True:
-        ans = input(f"{question} [y/n] > ").strip().lower()
-        if ans in ('y', 'yes'): return True
-        if ans in ('n', 'no'): return False
+    return f"""# {title}
 
+**File:** `{src_path.name}`  
+**Language:** {ext.upper()}
 
-def prompt_extra_tags():
-    print("\nExtra tags? (comma-separated, or leave blank)")
-    raw = input("  > ").strip()
-    if not raw:
-        return []
-    return [t.strip().lower() for t in raw.split(',') if t.strip()]
+```{lang}
+{content}
+```
+"""
 
 
 def strip_frontmatter(content):
@@ -157,11 +164,17 @@ def find_image(filename, search_dirs):
 def make_image_html(src_path, alt, post_slug, filename):
     url = f"/assets/img/posts/{post_slug}/{filename}"
     if alt and alt != Path(filename).stem:
-        return f'<div style="text-align:center;margin:1.5rem auto;">\n  <img src="{url}" alt="{alt}" style="max-width:100%;border-radius:6px;">\n  <p style="font-size:0.82rem;font-style:italic;font-weight:bold;color:#868686;margin-top:0.4rem;">{alt}</p>\n</div>'
+        return (
+            f'<div style="text-align:center;margin:1.5rem auto;">\n'
+            f'  <img src="{url}" alt="{alt}" style="max-width:100%;border-radius:6px;">\n'
+            f'  <p style="font-size:0.82rem;font-style:italic;font-weight:bold;color:#868686;margin-top:0.4rem;">{alt}</p>\n'
+            f'</div>'
+        )
     return f"![{alt}]({url})"
 
 
 def convert(content, post_slug, search_dirs, img_dir):
+    # Image and markdown fixes (same as before)
     content = re.sub(r'!Pasted image ([^\n]+\.png)', r'![[Pasted image \1]]', content)
     content = re.sub(r'^(#{1,6})([^ #\n])', r'\1 \2', content, flags=re.MULTILINE)
     content = re.sub(r'([^\n])\n(```)', r'\1\n\n\2', content)
@@ -196,39 +209,25 @@ def convert(content, post_slug, search_dirs, img_dir):
     return content
 
 
-def process_file(src, post_date, category=None, difficulty=None, os_tag=None, tags_cli=None):
-    search_dirs = [src.parent, src.parent.parent, src.parent.parent.parent]
-
+def process_file(src, post_date, category=None, tags_cli=None):
     title = src.stem
     slug = slugify(title)
     post_name = f"{post_date}-{slug}"
 
     subdir_key = src.parent.name.lower()
     if not category:
-        category = SUBDIR_CATEGORY_MAP.get(subdir_key) or prompt_choice("Category?", CATEGORIES).capitalize()
+        category = SUBDIR_CATEGORY_MAP.get(subdir_key) or "Development"
 
-    # Determine parent category
-    if category == "Machines":
-        parent = "HackTheBox"
-    else:
-        parent = "Malware"
+    parent = "HackTheBox" if category == "Machines" else "Malware"
 
     if tags_cli:
         tags = [t.strip().lower() for t in re.split(r'[,\s]+', " ".join(tags_cli)) if t.strip()]
     else:
-        tags = []
-        if category == "Machines":
-            if not difficulty:
-                difficulty = SUBDIR_DIFFICULTY_MAP.get(subdir_key) or prompt_choice("Difficulty?", DIFFICULTIES)
-            if not os_tag:
-                os_tag = prompt_choice("OS?", OS_OPTIONS)
-            tags.extend([difficulty, os_tag])
-        extra = prompt_extra_tags()
-        tags += [t for t in extra if t not in tags]
-        if not tags:
-            tags = ["malware"]
+        tags = ["malware", "code"]
+        extra = []  # prompt_extra_tags() can be added back if wanted
+        tags += extra
 
-    for tag in tags:
+    for tag in set(tags):  # dedup
         ensure_tag_page(tag)
     ensure_category_page(parent)
     ensure_category_page(category)
@@ -236,7 +235,10 @@ def process_file(src, post_date, category=None, difficulty=None, os_tag=None, ta
     img_dir = ASSETS_DIR / post_name
     img_dir.mkdir(parents=True, exist_ok=True)
 
-    body = convert(strip_frontmatter(src.read_text(encoding="utf-8")), post_name, search_dirs, img_dir)
+    if src.suffix.lower() == '.md':
+        body = convert(strip_frontmatter(src.read_text(encoding="utf-8")), post_name, [src.parent], img_dir)
+    else:
+        body = code_to_markdown(src)
 
     tags_yaml = "\n".join(f"  - {t}" for t in tags)
     frontmatter = f"""---
@@ -250,52 +252,59 @@ tags:
 
     POSTS_DIR.mkdir(exist_ok=True)
     out = POSTS_DIR / f"{post_name}.md"
-    out.write_text(frontmatter + "\n" + body + "\n", encoding="utf-8")
+    out.write_text(frontmatter + body + "\n", encoding="utf-8")
 
-    print(f"\n[+] Post created: {out}")
-    print(f"[+] Images: {img_dir}/")
+    print(f"\n[+] SUCCESS: {out}")
+    print(f"    Images folder: {img_dir}")
     print(f"\n    git add _posts/{post_name}.md assets/img/posts/{post_name}/ tags/ _categories/")
     print(f"    git commit -m 'Add {title}'")
     print(f"    git push")
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("input", nargs="?", help="Obsidian .md file")
-    parser.add_argument("--category", "-c", choices=CATEGORIES)
-    parser.add_argument("--difficulty", "-D", choices=DIFFICULTIES)
-    parser.add_argument("--os", "-o", choices=OS_OPTIONS)
-    parser.add_argument("--tags", "-t", nargs="+")
-    parser.add_argument("--date", "-d", default=str(date.today()))
+    parser = argparse.ArgumentParser(description="Convert notes & code to Jekyll posts")
+    parser.add_argument("input", nargs="?", help="File or folder path (optional)")
+    parser.add_argument("--category", "-c", choices=CATEGORIES, help="Force category")
+    parser.add_argument("--tags", "-t", nargs="+", help="Extra tags")
+    parser.add_argument("--date", "-d", default=str(date.today()), help="Post date YYYYMMDD")
     args = parser.parse_args()
 
     post_date = parse_date(args.date)
 
     if args.input:
-        src = Path(args.input).expanduser().resolve()
-        if not src.exists():
-            sys.exit(f"[-] File not found: {src}")
-        process_file(src, post_date, args.category, args.difficulty, args.os, args.tags)
+        path = Path(args.input).expanduser().resolve()
+        if path.is_file():
+            process_file(path, post_date, args.category, args.tags)
+        elif path.is_dir():
+            print(f"[*] Processing folder: {path}")
+            for f in sorted(path.rglob("*.*")):
+                if f.name.startswith('.') or f.suffix.lower() not in {'.md','.c','.cpp','.h','.hpp','.py'}:
+                    continue
+                print(f"   → {f.name}")
+                process_file(f, post_date, args.category, args.tags)
+        else:
+            print(f"[-] Path not found: {path}")
         return
 
     # Scan mode
+    print("[*] Scanning all configured folders...")
+    all_files = scan_files()
     published = get_published_slugs()
-    all_files = scan_writeups()
     new_files = [f for f in all_files if slugify(f.stem) not in published]
 
     if not new_files:
         print("[+] No new files found.")
         return
 
-    print(f"[*] Found {len(new_files)} new file(s):")
+    print(f"[*] Found {len(new_files)} unpublished files:")
     for i, f in enumerate(new_files, 1):
-        print(f"  {i}) {f.stem} ({f.parent.name})")
+        print(f"  {i}) {f.name}  ({f.parent.name})")
 
     for f in new_files:
-        if prompt_yn(f"\nPublish '{f.stem}'?"):
-            process_file(f, post_date, args.category, args.difficulty, args.os, args.tags)
+        if input(f"\nPublish '{f.name}'? [y/n] > ").strip().lower() in ('y', 'yes'):
+            process_file(f, post_date, args.category, args.tags)
         else:
-            print(f"  [-] Skipped {f.stem}")
+            print(f"  [-] Skipped")
 
 
 if __name__ == "__main__":

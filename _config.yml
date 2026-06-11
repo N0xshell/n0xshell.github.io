@@ -5,7 +5,7 @@ timezone: Europe/Amsterdam
 
 # ↓ --- SEO ---
 title: N0xshell
-tagline: "Malware, Reversing, Development & HTB"
+tagline: "Malware Development, Reversing, & HTB"
 description: >-
   Malware analysis, reverse engineering, development notes, and HackTheBox writeups by N0xshell.
 url: "https://n0xshell.github.io"
