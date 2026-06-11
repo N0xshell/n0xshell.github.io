@@ -3,11 +3,12 @@
 theme: jekyll-theme-chirpy
 lang: en
 timezone: Europe/Amsterdam
+
 # ↓ --- SEO ---
 title: N0xshell
-tagline: "HackTheBox Writeups"
+tagline: "Malware, Reversing, Development & HTB"
 description: >-
-  HTB machine writeups, pro lab reviews, and certification exam notes by N0xshell.
+  Malware analysis, reverse engineering, development notes, and HackTheBox writeups by N0xshell.
 url: "https://n0xshell.github.io"
 github:
   username: N0xshell
@@ -17,6 +18,7 @@ social:
   links:
     - https://github.com/N0xshell
 # ↑ --- SEO ---
+
 webmaster_verifications:
   google:
   bing:
@@ -27,23 +29,29 @@ analytics:
     id:
 pageviews:
   provider:
+
 theme_mode: dark
 cdn:
 avatar: /assets/img/Github-logov2.png
 social_preview_image:
+
 toc: true
 comments:
   provider:
+
 assets:
   self_host:
     enabled:
+
 pwa:
   enabled: true
   cache:
     enabled: true
     deny_paths:
+
 paginate: 10
 baseurl: ""
+
 # ------------ Do not modify below unless you know what you're doing ------------------
 kramdown:
   footnote_backlink: "&#8617;&#xfe0e;"
@@ -56,12 +64,14 @@ kramdown:
       line_numbers: true
       start_line: 1
     theme: monokai
+
 collections:
   tabs:
     output: true
     sort_by: order
   categories:
     output: true
+
 defaults:
   - scope:
       path: ""
@@ -87,8 +97,10 @@ defaults:
     values:
       layout: category
       permalink: /categories/:title/
+
 sass:
   style: compressed
+
 compress_html:
   clippings: all
   comments: all
@@ -97,6 +109,7 @@ compress_html:
   blanklines: false
   ignore:
     envs: [development]
+
 exclude:
   - "*.gem"
   - "*.gemspec"

@@ -9,7 +9,7 @@ Usage:
   python3 obsidian_to_jekyll.py <file.md>              # single file
   python3 obsidian_to_jekyll.py <file.md> -c Machines -D medium -o windows
 
-Categories: Machines | Prolabs | Exam Review
+Categories: Machines | Development | Reversing
 """
 
 import re
@@ -23,19 +23,23 @@ POSTS_DIR      = Path("_posts")
 ASSETS_DIR     = Path("assets/img/posts")
 TAGS_DIR       = Path("tags")
 CATEGORIES_DIR = Path("_categories")
-CATEGORIES     = ["Machines", "Prolabs", "Exam Review"]
+CATEGORIES     = ["Machines", "Development", "Reversing"]
 DIFFICULTIES   = ["easy", "medium", "hard", "insane"]
 OS_OPTIONS     = ["windows", "linux", "freebsd", "other"]
 
+# Root for scanning writeups/notes - update as needed for your structure
 WRITEUPS_ROOT = Path("/mnt/Files/Security-Related/Pentesting-Related/HackTheBox/Machines-Writeups")
+# You can add more roots or adjust for development/reversing folders
 
 SUBDIR_CATEGORY_MAP = {
     "medium-machines": "Machines",
     "hard-machines":   "Machines",
     "easy-machines":   "Machines",
     "insane-machines": "Machines",
-    "exam review":     "Exam Review",
-    "prolabs":         "Prolabs",
+    # Add mappings for your new folders
+    "development":     "Development",
+    "reversing":       "Reversing",
+    "malware":         "Reversing",
 }
 
 SUBDIR_DIFFICULTY_MAP = {
@@ -258,23 +262,31 @@ def process_file(src, post_date, category=None, difficulty=None, os_tag=None, ta
     if not category:
         category = SUBDIR_CATEGORY_MAP.get(subdir_key) or \
                    prompt_choice("Category?", CATEGORIES).capitalize()
-    if not difficulty:
+
+    # For non-Machines categories, difficulty/OS are optional
+    if not difficulty and category == "Machines":
         difficulty = SUBDIR_DIFFICULTY_MAP.get(subdir_key) or \
                      prompt_choice("Difficulty?", DIFFICULTIES)
-    if not os_tag:
+    if not os_tag and category == "Machines":
         os_tag = prompt_choice("OS?", OS_OPTIONS)
 
     if tags_cli:
         raw  = " ".join(tags_cli)
         tags = [t.strip().lower() for t in re.split(r'[,\s]+', raw) if t.strip()]
     else:
-        tags  = [difficulty, os_tag]
+        tags = []
+        if category == "Machines" and difficulty:
+            tags.append(difficulty)
+        if category == "Machines" and os_tag:
+            tags.append(os_tag)
         extra = prompt_extra_tags()
         tags += [t for t in extra if t not in tags]
+        if not tags:
+            tags = ["malware"] if category in ["Development", "Reversing"] else ["notes"]
 
     for tag in tags:
         ensure_tag_page(tag)
-    ensure_category_page("HackTheBox")
+    ensure_category_page("HackTheBox" if category == "Machines" else category)
     ensure_category_page(category)
 
     img_dir = ASSETS_DIR / post_name
@@ -289,10 +301,11 @@ def process_file(src, post_date, category=None, difficulty=None, os_tag=None, ta
 
     tags_yaml   = "\n".join(f"  - {t}" for t in tags)
     cat_display = category if category in CATEGORIES else category.capitalize()
+    main_cat = "HackTheBox" if category == "Machines" else cat_display
     frontmatter = f"""---
 title: "{title}"
 date: {post_date} 00:00:00 +0100
-categories: [HackTheBox, {cat_display}]
+categories: [{main_cat}, {cat_display}]
 tags:
 {tags_yaml}
 ---
@@ -312,7 +325,7 @@ tags:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("input",        nargs="?",           help="Obsidian .md file (omit to scan)")
-    parser.add_argument("--category",   "-c", choices=CATEGORIES)
+    parser.add_argument("--category",   "-c", choices=CATEGORIES, help="Category for the post")
     parser.add_argument("--difficulty", "-D", choices=DIFFICULTIES)
     parser.add_argument("--os",         "-o", choices=OS_OPTIONS)
     parser.add_argument("--tags",       "-t", nargs="+")
