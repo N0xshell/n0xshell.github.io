@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """
-<<<<<<< Updated upstream
 obsidian_to_jekyll.py
 Converts Obsidian .md notes + source code files (.c, .h, .cpp, etc.) into Jekyll/Chirpy posts.
 
@@ -24,20 +23,19 @@ Categories:
    - Reversing    → under Malware
 
 Update WRITEUPS_ROOTS list below with your actual Windows paths.
-=======
-Simple & Clean: One post per sub-folder (Today's real date)
->>>>>>> Stashed changes
 """
 
 import re
+import sys
+import shutil
 import argparse
 from datetime import date
 from pathlib import Path
 
-POSTS_DIR = Path("_posts")
-TAGS_DIR = Path("tags")
+POSTS_DIR      = Path("_posts")
+ASSETS_DIR     = Path("assets/img/posts")
+TAGS_DIR       = Path("tags")
 CATEGORIES_DIR = Path("_categories")
-<<<<<<< Updated upstream
 
 CATEGORIES     = ["Machines", "Development", "Reversing"]
 DIFFICULTIES   = ["easy", "medium", "hard", "insane"]
@@ -62,8 +60,6 @@ SUBDIR_CATEGORY_MAP = {
     "insane-machines": "Machines",
 }
 
-=======
->>>>>>> Stashed changes
 
 def slugify(s):
     s = s.lower().strip()
@@ -71,7 +67,6 @@ def slugify(s):
     s = re.sub(r'[\s_]+', '-', s)
     return s.strip('-')
 
-<<<<<<< Updated upstream
 
 def parse_date(date_str):
     clean = date_str.replace('-', '')
@@ -264,48 +259,19 @@ tags:
     print(f"\n    git add _posts/{post_name}.md assets/img/posts/{post_name}/ tags/ _categories/")
     print(f"    git commit -m 'Add {title}'")
     print(f"    git push")
-=======
-def ensure_category_page(category):
-    CATEGORIES_DIR.mkdir(exist_ok=True)
-    slug = slugify(category)
-    (CATEGORIES_DIR / f"{slug}.md").write_text(f"""---
-layout: category
-title: {category}
-category: {category}
-permalink: /categories/{slug}/
----
-""", encoding="utf-8")
->>>>>>> Stashed changes
 
-def folder_to_markdown(folder: Path):
-    content = f"# {folder.name}\n\n**Folder:** `{folder.name}`\n\n"
-    for f in sorted(folder.iterdir()):
-        if f.is_file() and f.suffix.lower() in {'.c', '.h', '.cpp', '.hpp', '.py'}:
-            lang = {'.c': 'c', '.h': 'c', '.cpp': 'cpp', '.hpp': 'cpp', '.py': 'python'}.get(f.suffix.lower(), 'text')
-            code = f.read_text(encoding="utf-8", errors="replace")
-            content += f"## {f.name}\n\n```{lang}\n{code}\n```\n\n---\n\n"
-    return content
 
 def main():
-<<<<<<< Updated upstream
     parser = argparse.ArgumentParser(description="Convert notes & code to Jekyll posts")
     parser.add_argument("input", nargs="?", help="File or folder path (optional)")
     parser.add_argument("--category", "-c", choices=CATEGORIES, help="Force category")
     parser.add_argument("--tags", "-t", nargs="+", help="Extra tags")
     parser.add_argument("--date", "-d", default=str(date.today()), help="Post date YYYYMMDD")
     parser.add_argument("--batch", action="store_true", help="No confirmation prompts (for big folders)")
-=======
-    parser = argparse.ArgumentParser()
-    parser.add_argument("folder", help="Path to the folder with subfolders")
-    parser.add_argument("-c", "--category", default="Development")
-    parser.add_argument("--batch", action="store_true")
->>>>>>> Stashed changes
     args = parser.parse_args()
 
-    root = Path(args.folder).resolve()
-    today = date.today().strftime("%Y-%m-%d")
+    post_date = parse_date(args.date)
 
-<<<<<<< Updated upstream
     if args.input:
         path = Path(args.input).expanduser().resolve()
         if path.is_file():
@@ -343,34 +309,7 @@ def main():
             process_file(f, post_date, args.category, args.tags)
         else:
             print(f"  [-] Skipped")
-=======
-    for sub in sorted(root.iterdir()):
-        if not sub.is_dir() or sub.name.startswith('.'):
-            continue
-        print(f"→ Processing: {sub.name}")
-        if not args.batch and input("   Create post? [Y/n] > ").strip().lower() not in ('','y','yes'):
-            continue
 
-        body = folder_to_markdown(sub)
-        post_name = f"{today}-{slugify(sub.name)}"
-
-        ensure_category_page("Malware")
-        ensure_category_page(args.category)
-
-        frontmatter = f"""---
-title: "{sub.name}"
-date: {today} 00:00:00 +0100
-categories: [Malware, {args.category}]
-tags:
-  - malware
-  - code
----
-
-"""
->>>>>>> Stashed changes
-
-        (POSTS_DIR / f"{post_name}.md").write_text(frontmatter + body, encoding="utf-8")
-        print(f"[+] Created: {post_name}.md")
 
 if __name__ == "__main__":
     main()
