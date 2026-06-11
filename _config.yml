@@ -49,8 +49,9 @@ pwa:
     deny_paths:
 
 paginate: 10
-future: true
+
 baseurl: ""
+future: true
 
 # ------------ Do not modify below unless you know what you're doing ------------------
 kramdown:
