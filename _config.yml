@@ -4,12 +4,14 @@ theme: jekyll-theme-chirpy
 lang: en
 timezone: Europe/Amsterdam
 
-# ↓ --- SEO ---
+# --- SEO ---
 
 title: N0xshell
 tagline: "Malware Development, Reversing & HTB"
+
 description: >-
-Malware analysis, reverse engineering, development notes, and HackTheBox writeups by N0xshell.
+Malware analysis, reverse engineering, development notes,
+and HackTheBox writeups by N0xshell.
 
 url: "https://n0xshell.github.io"
 
@@ -22,8 +24,6 @@ email: "RickRoll"
 links:
 - https://github.com/N0xshell
 
-# ↑ --- SEO ---
-
 future: true
 
 theme_mode: dark
@@ -33,8 +33,6 @@ avatar: /assets/img/Github-logov2.png
 
 paginate: 10
 baseurl: ""
-
-# ------------ Do not modify below unless you know what you're doing ------------------
 
 kramdown:
 footnote_backlink: "↩︎"
