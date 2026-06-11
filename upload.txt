@@ -1,3 +1,0 @@
-~/publish_htb.sh \
-  "/mnt/Files/Security-Related/Pentesting-Related/HackTheBox/Machines-Writeups/Hard Machines/Redelegate/Redelegate.md" \
-  hard AD kerberos delegation
