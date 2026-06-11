@@ -1,86 +1,90 @@
 # The Site Configuration
+
 theme: jekyll-theme-chirpy
 lang: en
 timezone: Europe/Amsterdam
 
 # ↓ --- SEO ---
+
 title: N0xshell
-<<<<<<< Updated upstream
-tagline: "Malware, Reversing, Development & HTB"
-=======
 tagline: "Malware Development, Reversing & HTB"
->>>>>>> Stashed changes
 description: >-
-  Malware analysis, reverse engineering, development notes, and HackTheBox writeups by N0xshell.
+Malware analysis, reverse engineering, development notes, and HackTheBox writeups by N0xshell.
+
 url: "https://n0xshell.github.io"
+
 github:
-  username: N0xshell
+username: N0xshell
+
 social:
-  name: N0xshell
-  email: "RickRoll"
-  links:
-    - https://github.com/N0xshell
+name: N0xshell
+email: "RickRoll"
+links:
+- https://github.com/N0xshell
+
 # ↑ --- SEO ---
 
 future: true
 
 theme_mode: dark
+
 cdn:
-  avatar: /assets/img/Github-logov2.png
+avatar: /assets/img/Github-logov2.png
 
 paginate: 10
 baseurl: ""
 
 # ------------ Do not modify below unless you know what you're doing ------------------
+
 kramdown:
-  footnote_backlink: "&#8617;&#xfe0e;"
-  syntax_highlighter: rouge
-  syntax_highlighter_opts:
-    css_class: highlight
-    span:
-      line_numbers: false
-    block:
-      line_numbers: true
-      start_line: 1
-    theme: monokai
+footnote_backlink: "↩︎"
+syntax_highlighter: rouge
+syntax_highlighter_opts:
+css_class: highlight
+span:
+line_numbers: false
+block:
+line_numbers: true
+start_line: 1
+theme: monokai
 
 collections:
-  tabs:
-    output: true
-    sort_by: order
-  categories:
-    output: true
+tabs:
+output: true
+sort_by: order
+categories:
+output: true
 
 defaults:
-  - scope:
-      path: ""
-      type: posts
-    values:
-      layout: post
-      comments: false
-      toc: true
-      permalink: /posts/:title/
-  - scope:
-      path: ""
-      type: categories
-    values:
-      layout: category
-      permalink: /categories/:title/
+
+* scope:
+  path: ""
+  type: posts
+  values:
+  layout: post
+  comments: false
+  toc: true
+  permalink: /posts/:title/
+
+* scope:
+  path: ""
+  type: categories
+  values:
+  layout: category
+  permalink: /categories/:title/
 
 sass:
-  style: compressed
+style: compressed
 
 exclude:
-  - "*.gem"
-  - "*.gemspec"
-  - docs
-  - tools
-  - README.md
-  - LICENSE
-<<<<<<< Updated upstream
-  - purgecss.js
-  - "*.config.js"
-  - "package*.json"
-=======
->>>>>>> Stashed changes
-  - obsidian_to_jekyll.py
+
+* "*.gem"
+* "*.gemspec"
+* docs
+* tools
+* README.md
+* LICENSE
+* purgecss.js
+* "*.config.js"
+* "package*.json"
+* obsidian_to_jekyll.py
