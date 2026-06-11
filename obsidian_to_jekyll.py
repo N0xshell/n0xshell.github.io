@@ -267,6 +267,7 @@ def main():
     parser.add_argument("--category", "-c", choices=CATEGORIES, help="Force category")
     parser.add_argument("--tags", "-t", nargs="+", help="Extra tags")
     parser.add_argument("--date", "-d", default=str(date.today()), help="Post date YYYYMMDD")
+    parser.add_argument("--batch", action="store_true", help="No confirmation prompts (for big folders)")
     args = parser.parse_args()
 
     post_date = parse_date(args.date)
@@ -281,7 +282,10 @@ def main():
                 if f.name.startswith('.') or f.suffix.lower() not in {'.md','.c','.cpp','.h','.hpp','.py'}:
                     continue
                 print(f"   → {f.name}")
-                process_file(f, post_date, args.category, args.tags)
+                if args.batch or input("   Publish? [Y/n] > ").strip().lower() in ('', 'y', 'yes'):
+                    process_file(f, post_date, args.category, args.tags)
+                else:
+                    print("   Skipped")
         else:
             print(f"[-] Path not found: {path}")
         return
@@ -301,7 +305,7 @@ def main():
         print(f"  {i}) {f.name}  ({f.parent.name})")
 
     for f in new_files:
-        if input(f"\nPublish '{f.name}'? [y/n] > ").strip().lower() in ('y', 'yes'):
+        if args.batch or input(f"\nPublish '{f.name}'? [y/n] > ").strip().lower() in ('y', 'yes'):
             process_file(f, post_date, args.category, args.tags)
         else:
             print(f"  [-] Skipped")
