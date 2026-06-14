@@ -12,13 +12,10 @@ I manage Windows/RHEL fleets, Zabbix monitoring stacks, and Cisco infrastructure
 
 ## What's here
 
-- **HackTheBox** — machine writeups, mostly medium/hard Windows AD boxes
-- **Malware Dev** — loader development, shellcode, C2 implants, evasion techniques
-- **Reversing** — analysis notes, unpacking, deobfuscation
+- **HackTheBox**
+- **Malware Dev** 
+- **Reversing**
 
-## Certifications
-
-- Zabbix Certified Professional 7.0
 
 ## Links
 

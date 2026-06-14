@@ -36,11 +36,11 @@ DIFFICULTIES = ["easy", "medium", "hard", "insane"]
 OS_OPTIONS   = ["windows", "linux", "freebsd", "other"]
 SOURCES      = ["htb", "maldev", "reversing"]
 
-# ── Root paths ────────────────────────────────────────────────────────────────
+# ── Root paths ────────────────────────────────────────────
 CONTENT_ROOTS = {
-    "htb":       Path("/mnt/Files/Security-Related/Pentesting-Related/HackTheBox/Machines-Writeups"),
-    "maldev":    Path("/mnt/Files/Security-Related/MalDev"),
-    "reversing": Path("/mnt/Files/Security-Related/Reversing"),
+    "htb":       Path("//10.0.0.15/Files/Security-Related/Pentesting-Related/HackTheBox/Machines-Writeups"),
+    "maldev":    Path("//10.0.0.15/Files/Security-Related/Malware-Related/MaldevAcademy-Related/Malware Development Modules"),
+    "reversing": Path("//10.0.0.15/Files/Security-Related/Malware-Related/Reversing-Notes"),
 }
 
 # ── HTB subdir → category / difficulty auto-mapping ───────────────────────────
@@ -101,16 +101,13 @@ def get_published_slugs():
 def detect_source(path: Path) -> str:
     """Best-effort source detection from the file's absolute path."""
     parts = [p.lower() for p in path.parts]
+    full = str(path).lower()
     if "hackthebox" in parts or "htb" in parts or "machines-writeups" in parts:
         return "htb"
-    if "maldev" in parts or "mal-dev" in parts:
+    if "malware-related" in parts or "maldevacademy-related" in parts or "maldev" in parts or "mal-dev" in parts:
         return "maldev"
     if "reversing" in parts or "reverse-engineering" in parts:
         return "reversing"
-    if "research" in parts:
-        return "research"
-    if "tools" in parts:
-        return "tools"
     return "htb"  # safe default — will prompt for category anyway
 
 
