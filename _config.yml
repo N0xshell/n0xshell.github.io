@@ -1,22 +1,36 @@
-# The Site Configuration
-# Import the theme
+# ──────────────────────────────────────────────────────────────────────────────
+# N0xshell — Jekyll/Chirpy configuration
+# ──────────────────────────────────────────────────────────────────────────────
 theme: jekyll-theme-chirpy
 lang: en
 timezone: Europe/Amsterdam
-# ↓ --- SEO ---
+
+# ── SEO ───────────────────────────────────────────────────────────────────────
 title: N0xshell
-tagline: "Malware Development, Reversing & HTB"
+tagline: "HackTheBox · Malware Dev · Reversing"
 description: >-
-  Malware analysis, reverse engineering, development notes, and HackTheBox writeups by N0xshell.
+  HackTheBox machine writeups, malware development notes, and reverse engineering
+  by N0xshell — sysadmin by day, hacker by night.
 url: "https://n0xshell.github.io"
+baseurl: ""
+
+# ── Identity ──────────────────────────────────────────────────────────────────
 github:
   username: N0xshell
+
 social:
   name: N0xshell
-  email: "RickRoll"
+  email: ""
   links:
     - https://github.com/N0xshell
-# ↑ --- SEO ---
+    - https://app.hackthebox.com/users/N0xshell
+
+# ── Appearance ────────────────────────────────────────────────────────────────
+theme_mode: dark
+avatar: /assets/img/Github-logov2.png
+toc: true
+
+# ── Analytics / SEO verifications (fill in when ready) ───────────────────────
 webmaster_verifications:
   google:
   bing:
@@ -27,24 +41,32 @@ analytics:
     id:
 pageviews:
   provider:
-theme_mode: dark
-cdn:
-avatar: /assets/img/Github-logov2.png
-social_preview_image:
-toc: true
+
+# ── Social preview ────────────────────────────────────────────────────────────
+social_preview_image:   # /assets/img/preview.png when you have one
+
+# ── Comments (disabled) ───────────────────────────────────────────────────────
 comments:
   provider:
+
+# ── Assets ────────────────────────────────────────────────────────────────────
 assets:
   self_host:
     enabled:
+
+# ── PWA ───────────────────────────────────────────────────────────────────────
 pwa:
   enabled: true
   cache:
     enabled: true
     deny_paths:
+
+# ── Pagination ────────────────────────────────────────────────────────────────
 paginate: 10
-baseurl: ""
-# ------------ Do not modify below unless you know what you're doing ------------------
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Do not modify below unless you know what you're doing
+# ──────────────────────────────────────────────────────────────────────────────
 kramdown:
   footnote_backlink: "&#8617;&#xfe0e;"
   syntax_highlighter: rouge
@@ -56,12 +78,14 @@ kramdown:
       line_numbers: true
       start_line: 1
     theme: monokai
+
 collections:
   tabs:
     output: true
     sort_by: order
   categories:
     output: true
+
 defaults:
   - scope:
       path: ""
@@ -87,8 +111,10 @@ defaults:
     values:
       layout: category
       permalink: /categories/:title/
+
 sass:
   style: compressed
+
 compress_html:
   clippings: all
   comments: all
@@ -97,6 +123,7 @@ compress_html:
   blanklines: false
   ignore:
     envs: [development]
+
 exclude:
   - "*.gem"
   - "*.gemspec"
@@ -108,3 +135,4 @@ exclude:
   - "*.config.js"
   - "package*.json"
   - obsidian_to_jekyll.py
+  - publish_note.sh

@@ -1,0 +1,258 @@
+---
+---
+
+@import "jekyll-theme-chirpy";
+
+// ── Nord palette ──────────────────────────────────────────────────────────────
+// Frost:   #88C0D0 (accent), #81A1C1 (muted), #5E81AC (dark)
+// Polar:   #2E3440 #3B4252 #434C5E #4C566A
+// Snow:    #D8DEE9 #E5E9F0 #ECEFF4
+// Aurora:  #BF616A #D08770 #EBCB8B #A3BE8C #B48EAD
+
+// ── Core accent override ──────────────────────────────────────────────────────
+:root {
+  --link-color:          #88C0D0;
+  --link-underline:      #88C0D080;
+  --btn-active-color:    #88C0D0;
+  --btn-border-color:    #88C0D0;
+  --tag-hover:           #88C0D0;
+  --toc-highlight:       #88C0D0;
+  --search-tag-bg:       #3B4252;
+}
+
+[data-mode="dark"] {
+  --link-color:          #88C0D0;
+  --link-underline:      #88C0D060;
+  --sidebar-bg:          #2E3440;
+  --sidebar-border:      #3B4252;
+  --main-bg:             #1e2430;
+  --card-bg:             #252d3a;
+  --card-border:         #3B4252;
+  --topbar-bg:           #252d3a;
+  --topbar-text:         #D8DEE9;
+  --mask-bg:             #1e2430cc;
+  --btn-active-color:    #88C0D0;
+  --tag-hover:           #88C0D0;
+  --toc-highlight:       #88C0D0;
+  --heading-color:       #ECEFF4;
+  --text-color:          #D8DEE9;
+  --text-muted-color:    #81A1C1;
+  --border-color:        #3B4252;
+  --label-color:         #81A1C1;
+  --search-tag-bg:       #3B4252;
+  --search-tag-color:    #D8DEE9;
+  --code-bg:             #252d3a;
+  --code-header-bg:      #2E3440;
+  --highlight-bg:        #252d3a;
+}
+
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+#sidebar {
+  background: var(--sidebar-bg, #2E3440);
+  border-right: 1px solid #3B4252;
+
+  .site-title a {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: #ECEFF4;
+
+    &:hover { color: #88C0D0; }
+  }
+
+  .site-subtitle {
+    color: #81A1C1;
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+  }
+
+  .nav-link {
+    color: #D8DEE9;
+    font-size: 0.9rem;
+    border-radius: 4px;
+    transition: background 0.15s, color 0.15s;
+
+    &:hover, &.active {
+      color: #88C0D0;
+      background: #3B425240;
+    }
+
+    i { color: #81A1C1; }
+    &.active i, &:hover i { color: #88C0D0; }
+  }
+
+  // Sidebar bottom icons
+  .sidebar-bottom {
+    a { color: #81A1C1; }
+    a:hover { color: #88C0D0; }
+  }
+}
+
+// ── Post cards ────────────────────────────────────────────────────────────────
+.post-preview {
+  background: var(--card-bg, #252d3a);
+  border: 1px solid var(--card-border, #3B4252);
+  border-radius: 6px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    border-color: #88C0D0;
+    box-shadow: 0 0 0 1px #88C0D030, 0 4px 16px #00000040;
+  }
+
+  .post-meta {
+    color: #81A1C1;
+    font-size: 0.78rem;
+  }
+
+  h1, h2, h3 {
+    color: #ECEFF4;
+    a { color: #ECEFF4; }
+    a:hover { color: #88C0D0; }
+  }
+}
+
+// ── Category / tag badges ─────────────────────────────────────────────────────
+.categories, .post-tag {
+  a {
+    border: 1px solid #3B4252;
+    border-radius: 4px;
+    color: #81A1C1;
+    font-size: 0.72rem;
+    padding: 1px 7px;
+    transition: border-color 0.15s, color 0.15s;
+
+    &:hover {
+      color: #88C0D0;
+      border-color: #88C0D0;
+      text-decoration: none;
+    }
+  }
+}
+
+// ── Code blocks ───────────────────────────────────────────────────────────────
+div.highlight, figure.highlight {
+  background: #1e2430;
+  border: 1px solid #3B4252;
+  border-radius: 6px;
+
+  // Language label in header
+  .code-header {
+    background: #2E3440;
+    border-bottom: 1px solid #3B4252;
+    border-radius: 6px 6px 0 0;
+
+    .code-lang { color: #88C0D0; font-size: 0.75rem; }
+    button.copy  { color: #81A1C1; &:hover { color: #88C0D0; } }
+  }
+
+  pre { background: transparent; }
+}
+
+// Inline code
+code:not([class]) {
+  background: #2E3440;
+  color: #88C0D0;
+  border: 1px solid #3B425280;
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 0.85em;
+}
+
+// ── ToC ───────────────────────────────────────────────────────────────────────
+#toc-wrapper {
+  border-left: 2px solid #3B4252;
+
+  li a {
+    color: #81A1C1;
+    &:hover { color: #88C0D0; }
+  }
+
+  li.active > a {
+    color: #88C0D0;
+    font-weight: 600;
+  }
+}
+
+// ── Post headings ─────────────────────────────────────────────────────────────
+.post-content {
+  h1, h2 {
+    border-bottom: 1px solid #3B4252;
+    padding-bottom: 0.25rem;
+    color: #ECEFF4;
+  }
+
+  h2::before {
+    content: "# ";
+    color: #88C0D0;
+    font-weight: 400;
+    opacity: 0.7;
+  }
+
+  h3::before {
+    content: "## ";
+    color: #81A1C1;
+    font-weight: 400;
+    opacity: 0.5;
+    font-size: 0.85em;
+  }
+
+  a {
+    color: #88C0D0;
+    text-decoration-color: #88C0D050;
+    &:hover { text-decoration-color: #88C0D0; }
+  }
+
+  // Blockquotes
+  blockquote {
+    border-left: 3px solid #88C0D0;
+    background: #2E344080;
+    border-radius: 0 4px 4px 0;
+    color: #D8DEE9;
+  }
+
+  // Tables
+  table {
+    thead { background: #2E3440; color: #88C0D0; }
+    tr:nth-child(even) { background: #252d3a; }
+    td, th { border-color: #3B4252; }
+  }
+}
+
+// ── Topbar ────────────────────────────────────────────────────────────────────
+#topbar {
+  background: var(--topbar-bg, #252d3a);
+  border-bottom: 1px solid #3B4252;
+
+  .breadcrumb-item a { color: #88C0D0; }
+  #search-trigger, .mode-toggle, #sidebar-trigger { color: #81A1C1; }
+}
+
+// ── Tags page ─────────────────────────────────────────────────────────────────
+#tags {
+  .tag {
+    background: #2E3440;
+    border: 1px solid #3B4252;
+    border-radius: 4px;
+    color: #D8DEE9;
+    transition: border-color 0.15s, color 0.15s;
+
+    &:hover {
+      border-color: #88C0D0;
+      color: #88C0D0;
+    }
+  }
+}
+
+// ── Search ────────────────────────────────────────────────────────────────────
+#search-result-wrapper {
+  .search-result-title { color: #88C0D0; }
+  .search-result em { color: #EBCB8B; font-style: normal; font-weight: 600; }
+}
+
+// ── Back to top ───────────────────────────────────────────────────────────────
+#back-to-top {
+  background: #88C0D0;
+  color: #2E3440;
+  &:hover { background: #81A1C1; }
+}
