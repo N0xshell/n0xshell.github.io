@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
 """
-obsidian_to_jekyll.py
-Converts an Obsidian .md note to a Jekyll/Chirpy post.
-Handles both ![[image]] and ![alt](image) formats.
+obsidian_to_jekyll.py + c_to_jekyll.py combined
+Converts Obsidian .md notes OR C source code folders to Jekyll/Chirpy posts.
 
-Usage:
+Usage (Markdown):
   python3 obsidian_to_jekyll.py                              # scan mode (all sources)
   python3 obsidian_to_jekyll.py <file.md>                    # single file (auto-detect source)
   python3 obsidian_to_jekyll.py <file.md> -s htb -c Machines -D medium -o windows
-  python3 obsidian_to_jekyll.py <file.md> -s maldev -c MalDev
-  python3 obsidian_to_jekyll.py <file.md> -s reversing -c Reversing
+  python3 obsidian_to_jekyll.py <file.md> -s maldev -c Development
 
-Sources:    htb | maldev | reversing | research | tools
-Categories (HTB):      Machines | Prolabs | Exam Review
-Categories (MalDev):   MalDev | Reversing | Research | Tools
+Usage (C Code):
+  python3 obsidian_to_jekyll.py --scan-code maldev          # scan maldev folders for .c files
+  python3 obsidian_to_jekyll.py --scan-code reversing       # scan reversing folders for .c files
+  python3 obsidian_to_jekyll.py --code-folder "folder-path" # single folder with C files
+
+Sources:    htb | maldev | reversing
+Categories (HTB):      Machines
+Categories (MalDev):   Development | Reversing
 """
 
 import re
@@ -43,7 +46,7 @@ CONTENT_ROOTS = {
     "reversing": Path("//10.0.0.15/Files/Security-Related/Malware-Related/Reversing-Notes"),
 }
 
-# ── HTB subdir → category / difficulty auto-mapping ───────────────────────────
+# ── HTB subdir → category / difficulty auto-mapping
 SUBDIR_CATEGORY_MAP = {
     "medium-machines": "Machines",
     "hard-machines":   "Machines",
@@ -58,7 +61,7 @@ SUBDIR_DIFFICULTY_MAP = {
     "insane-machines": "insane",
 }
 
-# ── MalDev subdir → category auto-mapping ─────────────────────────────────────
+# ── MalDev subdir → category auto-mapping
 MALDEV_SUBDIR_CATEGORY_MAP = {
     "maldev":    "Development",
     "mal-dev":   "Development",
@@ -101,14 +104,13 @@ def get_published_slugs():
 def detect_source(path: Path) -> str:
     """Best-effort source detection from the file's absolute path."""
     parts = [p.lower() for p in path.parts]
-    full = str(path).lower()
     if "hackthebox" in parts or "htb" in parts or "machines-writeups" in parts:
         return "htb"
     if "malware-related" in parts or "maldevacademy-related" in parts or "maldev" in parts or "mal-dev" in parts:
         return "maldev"
-    if "reversing" in parts or "reverse-engineering" in parts:
+    if "reversing" in parts or "reverse-engineering" in parts or "reversing-notes" in parts:
         return "reversing"
-    return "htb"  # safe default — will prompt for category anyway
+    return "htb"
 
 
 def ensure_tag_page(tag):
@@ -150,6 +152,24 @@ def scan_all():
     return found
 
 
+def scan_code_folders(source):
+    """Scan maldev/reversing root for folders with .c files."""
+    root = CONTENT_ROOTS.get(source)
+    if not root or not root.exists():
+        print(f"[-] Source root not found: {source}")
+        return []
+    
+    found = []
+    for folder in sorted(root.iterdir()):
+        if not folder.is_dir() or folder.name.startswith('.'):
+            continue
+        c_files = list(folder.glob("*.c"))
+        if c_files:
+            found.append((folder, c_files))
+    
+    return found
+
+
 def prompt_choice(question, options):
     print(f"\n{question}")
     for i, opt in enumerate(options, 1):
@@ -179,18 +199,6 @@ def prompt_yn(question):
         except KeyboardInterrupt:
             print()
             sys.exit(0)
-
-
-def prompt_extra_tags():
-    print("\nExtra tags? (comma-separated, or leave blank)")
-    try:
-        raw = input("  > ").strip()
-    except KeyboardInterrupt:
-        print()
-        sys.exit(0)
-    if not raw:
-        return []
-    return [t.strip().lower() for t in raw.split(',') if t.strip()]
 
 
 def strip_frontmatter(content):
@@ -269,7 +277,73 @@ def convert(content, post_slug, search_dirs, img_dir):
     return content
 
 
-# ── Core processing ───────────────────────────────────────────────────────────
+# ── Code file processing ──────────────────────────────────────────────────────
+
+def process_code_folder(folder: Path, source: str, post_date: str):
+    """Create a Jekyll post from a folder containing .c files."""
+    title = folder.name
+    slug = slugify(title)
+    post_name = f"{post_date}-{slug}"
+    
+    # Determine category from source
+    if source == "maldev":
+        category = "Development"
+    elif source == "reversing":
+        category = "Reversing"
+    else:
+        category = "Development"  # fallback
+    
+    # Read all .c files in the folder
+    c_files = sorted(folder.glob("*.c"))
+    if not c_files:
+        print(f"[-] No .c files found in {folder}")
+        return
+    
+    # Build body with code blocks for each file
+    body_parts = [f"# {title}\n"]
+    
+    for c_file in c_files:
+        try:
+            code = c_file.read_text(encoding="utf-8")
+            body_parts.append(f"\n## {c_file.name}\n\n```c\n{code}\n```\n")
+            print(f"[+] Included: {c_file.name}")
+        except Exception as e:
+            print(f"[!] Failed to read {c_file.name}: {e}")
+    
+    body = "\n".join(body_parts)
+    
+    # Create category pages
+    ensure_category_page("Malware")
+    ensure_category_page(category)
+    
+    # Tags
+    tags = ["malware", category.lower()]
+    for tag in tags:
+        ensure_tag_page(tag)
+    
+    tags_yaml = "\n".join(f"  - {t}" for t in tags)
+    categories_yaml = f"[Malware, {category}]"
+    
+    frontmatter = f"""---
+title: "{title}"
+date: {post_date} 00:00:00 +0100
+categories: {categories_yaml}
+tags:
+{tags_yaml}
+---
+"""
+    
+    POSTS_DIR.mkdir(exist_ok=True)
+    out = POSTS_DIR / f"{post_name}.md"
+    out.write_text(frontmatter + "\n" + body + "\n", encoding="utf-8")
+    
+    print(f"\n[+] Post created: {out}")
+    print(f"    git add _posts/{post_name}.md tags/ _categories/")
+    print(f"    git commit -m 'Add {title}'")
+    print(f"    git push")
+
+
+# ── Markdown file processing ──────────────────────────────────────────────────
 
 def process_file(src, post_date, source=None, category=None, difficulty=None, os_tag=None, tags_cli=None):
     search_dirs = [src.parent, src.parent.parent, src.parent.parent.parent]
@@ -284,7 +358,6 @@ def process_file(src, post_date, source=None, category=None, difficulty=None, os
     subdir_key = src.parent.name.lower()
     is_htb     = (source == "htb")
 
-    # ── Category ──────────────────────────────────────────────────────────────
     if not category:
         if is_htb:
             category = SUBDIR_CATEGORY_MAP.get(subdir_key) or \
@@ -293,7 +366,6 @@ def process_file(src, post_date, source=None, category=None, difficulty=None, os
             category = MALDEV_SUBDIR_CATEGORY_MAP.get(subdir_key) or \
                        prompt_choice("Category?", MALDEV_CATEGORIES)
 
-    # ── Difficulty / OS (HTB only) ────────────────────────────────────────────
     if is_htb:
         if not difficulty:
             difficulty = SUBDIR_DIFFICULTY_MAP.get(subdir_key) or \
@@ -301,7 +373,6 @@ def process_file(src, post_date, source=None, category=None, difficulty=None, os
         if not os_tag:
             os_tag = prompt_choice("OS?", OS_OPTIONS)
 
-    # ── Tags ──────────────────────────────────────────────────────────────────
     if tags_cli:
         raw  = " ".join(tags_cli)
         tags = [t.strip().lower() for t in re.split(r'[,\s]+', raw) if t.strip()]
@@ -310,13 +381,12 @@ def process_file(src, post_date, source=None, category=None, difficulty=None, os
             tags = [difficulty, os_tag]
         else:
             tags = ["malware", category.lower()]
-        extra = prompt_extra_tags()
+        extra = []
         tags += [t for t in extra if t not in tags]
 
     for tag in tags:
         ensure_tag_page(tag)
 
-    # ── Category pages ────────────────────────────────────────────────────────
     if is_htb:
         ensure_category_page("HackTheBox")
         ensure_category_page("Machines")
@@ -324,7 +394,6 @@ def process_file(src, post_date, source=None, category=None, difficulty=None, os
         ensure_category_page("Malware")
         ensure_category_page(category)
 
-    # ── Build post ────────────────────────────────────────────────────────────
     img_dir = ASSETS_DIR / post_name
     img_dir.mkdir(parents=True, exist_ok=True)
 
@@ -340,7 +409,6 @@ def process_file(src, post_date, source=None, category=None, difficulty=None, os
     if is_htb:
         categories_yaml = f"[HackTheBox, Machines]"
     else:
-        # category is either "Development" or "Reversing", parent is always "Malware"
         categories_yaml = f"[Malware, {category}]"
 
     frontmatter = f"""---
@@ -367,17 +435,59 @@ tags:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("input",        nargs="?",                   help="Obsidian .md file (omit to scan all sources)")
-    parser.add_argument("--source",     "-s", choices=SOURCES,       help="Content source type")
-    parser.add_argument("--category",   "-c", choices=ALL_CATEGORIES)
-    parser.add_argument("--difficulty", "-D", choices=DIFFICULTIES)
-    parser.add_argument("--os",         "-o", choices=OS_OPTIONS)
-    parser.add_argument("--tags",       "-t", nargs="+")
-    parser.add_argument("--date",       "-d", default=str(date.today()))
+    parser.add_argument("input",          nargs="?",                   help="Obsidian .md file")
+    parser.add_argument("--source",       "-s", choices=SOURCES,       help="Content source type")
+    parser.add_argument("--category",     "-c", choices=ALL_CATEGORIES)
+    parser.add_argument("--difficulty",   "-D", choices=DIFFICULTIES)
+    parser.add_argument("--os",           "-o", choices=OS_OPTIONS)
+    parser.add_argument("--tags",         "-t", nargs="+")
+    parser.add_argument("--date",         "-d", default=str(date.today()))
+    parser.add_argument("--scan-code",    choices=["maldev", "reversing"], help="Scan for C code folders")
+    parser.add_argument("--code-folder",  type=str, help="Single C code folder to process")
+    
     args = parser.parse_args()
 
     post_date = parse_date(args.date)
 
+    # Handle code folder scanning
+    if args.scan_code:
+        folders = scan_code_folders(args.scan_code)
+        if not folders:
+            print(f"[+] No folders with .c files found in {args.scan_code}")
+            return
+        
+        published = get_published_slugs()
+        new_folders = [(f, c) for f, c in folders if slugify(f.name) not in published]
+        
+        if not new_folders:
+            print("[+] All code folders already published")
+            return
+        
+        print(f"[*] Found {len(new_folders)} unpublished code folder(s):\n")
+        for i, (f, c) in enumerate(new_folders, 1):
+            print(f"  {i}) {f.name} ({len(c)} .c files)")
+        
+        print()
+        for folder, c_files in new_folders:
+            if prompt_yn(f"\nPublish '{folder.name}'?"):
+                process_code_folder(folder, args.scan_code, post_date)
+            else:
+                print(f"  [-] Skipped {folder.name}")
+        return
+    
+    # Handle single code folder
+    if args.code_folder:
+        folder = Path(args.code_folder).resolve()
+        if not folder.is_dir():
+            sys.exit(f"[-] Not a directory: {folder}")
+        c_files = list(folder.glob("*.c"))
+        if not c_files:
+            sys.exit(f"[-] No .c files in {folder}")
+        source = detect_source(folder)
+        process_code_folder(folder, source, post_date)
+        return
+    
+    # Handle markdown files
     if args.input:
         src = Path(args.input).expanduser().resolve()
         if not src.exists():
