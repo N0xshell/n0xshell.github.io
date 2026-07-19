@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 obsidian_to_jekyll.py + c_to_jekyll.py combined
-Converts Obsidian .md notes OR C source code folders to Jekyll/Chirpy posts.
+Converts Obsidian .md notes OR C/Rust source code folders to Jekyll/Chirpy posts.
 
 Usage (Markdown):
   python3 obsidian_to_jekyll.py                              # scan mode (all sources)
@@ -9,12 +9,13 @@ Usage (Markdown):
   python3 obsidian_to_jekyll.py <file.md> -s htb -c Machines -D medium -o windows
   python3 obsidian_to_jekyll.py <file.md> -s maldev -c Development
 
-Usage (C Code):
+Usage (C/Rust Code):
   python3 obsidian_to_jekyll.py --scan-code maldev          # scan maldev folders for .c files
   python3 obsidian_to_jekyll.py --scan-code reversing       # scan reversing folders for .c files
-  python3 obsidian_to_jekyll.py --code-folder "folder-path" # single folder with C files
+  python3 obsidian_to_jekyll.py --scan-code rust-maldev     # scan Rust malware dev folders for .rs files
+  python3 obsidian_to_jekyll.py --code-folder "folder-path" # single folder with C or Rust files
 
-Sources:    htb | maldev | reversing
+Sources:    htb | maldev | reversing | rust-maldev
 Categories (HTB):      Machines
 Categories (MalDev):   Development | Reversing
 """
@@ -37,13 +38,14 @@ ALL_CATEGORIES    = HTB_CATEGORIES + MALDEV_CATEGORIES
 
 DIFFICULTIES = ["easy", "medium", "hard", "insane"]
 OS_OPTIONS   = ["windows", "linux", "freebsd", "other"]
-SOURCES      = ["htb", "maldev", "reversing"]
+SOURCES      = ["htb", "maldev", "reversing", "rust-maldev"]
 
 # ── Root paths ────────────────────────────────────────────
 CONTENT_ROOTS = {
-    "htb":       Path("//10.0.0.15/Files/Security-Related/Pentesting-Related/HackTheBox/Machines-Writeups"),
-    "maldev":    Path("//10.0.0.15/Files/Security-Related/Malware-Related/MaldevAcademy-Related/Malware Development Modules"),
-    "reversing": Path("//10.0.0.15/Files/Security-Related/Malware-Related/Reversing-Notes"),
+    "htb":         Path("//10.0.0.15/Files/Security-Related/Pentesting-Related/HackTheBox/Machines-Writeups"),
+    "maldev":      Path("//10.0.0.15/Files/Security-Related/Malware-Related/MaldevAcademy-Related/Malware Development Modules"),
+    "reversing":   Path("//10.0.0.15/Files/Security-Related/Malware-Related/Reversing-Notes"),
+    "rust-maldev": Path("//10.0.0.15/Files/Security-Related/Malware-Related/MaldevAcademy-Related/Rust-Malware-Development"),
 }
 
 # ── HTB subdir → category / difficulty auto-mapping
@@ -153,7 +155,7 @@ def scan_all():
 
 
 def scan_code_folders(source):
-    """Scan maldev/reversing root for folders with .c files."""
+    """Scan maldev/reversing root for folders with .c or .rs files (recursive)."""
     root = CONTENT_ROOTS.get(source)
     if not root or not root.exists():
         print(f"[-] Source root not found: {source}")
@@ -163,9 +165,12 @@ def scan_code_folders(source):
     for folder in sorted(root.iterdir()):
         if not folder.is_dir() or folder.name.startswith('.'):
             continue
-        c_files = list(folder.glob("*.c"))
-        if c_files:
-            found.append((folder, c_files))
+        # Search recursively for code files
+        c_files = list(folder.rglob("*.c"))
+        rs_files = list(folder.rglob("*.rs"))
+        code_files = c_files + rs_files
+        if code_files:
+            found.append((folder, code_files))
     
     return found
 
@@ -280,35 +285,40 @@ def convert(content, post_slug, search_dirs, img_dir):
 # ── Code file processing ──────────────────────────────────────────────────────
 
 def process_code_folder(folder: Path, source: str, post_date: str):
-    """Create a Jekyll post from a folder containing .c files."""
+    """Create a Jekyll post from a folder containing .c or .rs files."""
     title = folder.name
     slug = slugify(title)
     post_name = f"{post_date}-{slug}"
     
     # Determine category from source
-    if source == "maldev":
+    if source in ("maldev", "rust-maldev"):
         category = "Development"
     elif source == "reversing":
         category = "Reversing"
     else:
         category = "Development"  # fallback
     
-    # Read all .c files in the folder
-    c_files = sorted(folder.glob("*.c"))
-    if not c_files:
-        print(f"[-] No .c files found in {folder}")
+    # Read all .c and .rs files in the folder (recursive)
+    c_files = sorted(folder.rglob("*.c"))
+    rs_files = sorted(folder.rglob("*.rs"))
+    code_files = c_files + rs_files
+    
+    if not code_files:
+        print(f"[-] No .c or .rs files found in {folder}")
         return
     
     # Build body with code blocks for each file
     body_parts = [f"# {title}\n"]
     
-    for c_file in c_files:
+    for code_file in code_files:
         try:
-            code = c_file.read_text(encoding="utf-8")
-            body_parts.append(f"\n## {c_file.name}\n\n```c\n{code}\n```\n")
-            print(f"[+] Included: {c_file.name}")
+            code = code_file.read_text(encoding="utf-8")
+            # Determine language based on extension
+            lang = "rust" if code_file.suffix == ".rs" else "c"
+            body_parts.append(f"\n## {code_file.name}\n\n```{lang}\n{code}\n```\n")
+            print(f"[+] Included: {code_file.name}")
         except Exception as e:
-            print(f"[!] Failed to read {c_file.name}: {e}")
+            print(f"[!] Failed to read {code_file.name}: {e}")
     
     body = "\n".join(body_parts)
     
@@ -442,8 +452,8 @@ def main():
     parser.add_argument("--os",           "-o", choices=OS_OPTIONS)
     parser.add_argument("--tags",         "-t", nargs="+")
     parser.add_argument("--date",         "-d", default=str(date.today()))
-    parser.add_argument("--scan-code",    choices=["maldev", "reversing"], help="Scan for C code folders")
-    parser.add_argument("--code-folder",  type=str, help="Single C code folder to process")
+    parser.add_argument("--scan-code",    choices=["maldev", "reversing", "rust-maldev"], help="Scan for C/Rust code folders")
+    parser.add_argument("--code-folder",  type=str, help="Single C/Rust code folder to process")
     
     args = parser.parse_args()
 
@@ -453,7 +463,7 @@ def main():
     if args.scan_code:
         folders = scan_code_folders(args.scan_code)
         if not folders:
-            print(f"[+] No folders with .c files found in {args.scan_code}")
+            print(f"[+] No folders with .c or .rs files found in {args.scan_code}")
             return
         
         published = get_published_slugs()
@@ -465,7 +475,10 @@ def main():
         
         print(f"[*] Found {len(new_folders)} unpublished code folder(s):\n")
         for i, (f, c) in enumerate(new_folders, 1):
-            print(f"  {i}) {f.name} ({len(c)} .c files)")
+            c_count = sum(1 for x in c if x.suffix == '.c')
+            rs_count = sum(1 for x in c if x.suffix == '.rs')
+            file_desc = f"{c_count} .c" if rs_count == 0 else f"{rs_count} .rs" if c_count == 0 else f"{c_count} .c, {rs_count} .rs"
+            print(f"  {i}) {f.name} ({file_desc} files)")
         
         print()
         for folder, c_files in new_folders:
@@ -480,9 +493,11 @@ def main():
         folder = Path(args.code_folder).resolve()
         if not folder.is_dir():
             sys.exit(f"[-] Not a directory: {folder}")
-        c_files = list(folder.glob("*.c"))
-        if not c_files:
-            sys.exit(f"[-] No .c files in {folder}")
+        c_files = list(folder.rglob("*.c"))
+        rs_files = list(folder.rglob("*.rs"))
+        code_files = c_files + rs_files
+        if not code_files:
+            sys.exit(f"[-] No .c or .rs files in {folder}")
         source = detect_source(folder)
         process_code_folder(folder, source, post_date)
         return
